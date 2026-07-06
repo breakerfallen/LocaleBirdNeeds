@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas</title>
+<script>try{if(localStorage.getItem("nn-theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}</script>
+<style>
+  :root {
+    --paper: #f3ead2; --paper-edge: #e7d9b6; --ink: #2b271f; --ink-soft: #7c7161;
+    --seal: #a2402f; --you: #3f6f52; --mel: #6a4a7a;
+  }
+  html.dark {
+    --paper: #000000; --paper-edge: #262626; --ink: #cbc5b6; --ink-soft: #98917f;
+    --seal: #e79a86; --you: #7fb894; --mel: #c0a6dd;
+  }
+  html.dark body { background: #000000; }
+  html.dark .card, html.dark .pills, html.dark .card .links a { background: #111111; }
+  html.dark img[src*="/vendor/silhouettes/"] { filter: invert(0.82) brightness(1.05); }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0; padding: 18px 22px 40px;
+    background: radial-gradient(120% 120% at 50% 0%, #f6efdb 0%, var(--paper) 60%, var(--paper-edge) 100%);
+    min-height: 100vh; color: var(--ink);
+    font-family: "Hoefler Text", "Songti SC", "Yu Mincho", Georgia, "Times New Roman", serif;
+  }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .top .left { display: flex; align-items: baseline; gap: 14px; }
+  a.back { color: var(--ink-soft); text-decoration: none; font-size: 14px; }
+  h1 { font-size: 22px; margin: 0; font-weight: 600; }
+  .sub { color: var(--ink-soft); font-size: 12px; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+  .pills { display: inline-flex; border: 1px solid var(--paper-edge); border-radius: 999px; overflow: hidden; background: #fbf6e8; }
+  .pills button { font-family: inherit; font-size: 12.5px; padding: 6px 13px; border: none; background: transparent; color: var(--ink-soft); cursor: pointer; }
+  .pills button.active { background: var(--ink); color: var(--paper); }
+
+  #grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+  .card {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    background: #fbf6e8; border: 1px solid var(--paper-edge); border-radius: 10px;
+    padding: 12px 8px 10px;
+  }
+  .card .go { display: flex; flex-direction: column; align-items: center; text-decoration: none; color: inherit; }
+  .card img { width: 110px; height: 110px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(60,45,20,0.15)); }
+  .card .nm { font-size: 13.5px; font-weight: 600; margin-top: 8px; line-height: 1.15; }
+  .card .sc { color: var(--ink-soft); font-style: italic; font-size: 10.5px; margin-top: 1px; }
+  .card .when { color: var(--ink-soft); font-size: 10.5px; margin-top: 4px; }
+  .card .dots { margin-top: 5px; height: 8px; }
+  .card .dots .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin: 0 2px; }
+  .card .links { display: flex; gap: 6px; margin-top: 8px; }
+  .card .links a { font-size: 11px; color: var(--ink-soft); text-decoration: none; border: 1px solid var(--paper-edge); border-radius: 999px; padding: 2px 9px; background: var(--paper); }
+  .card .links a:active { background: var(--paper-edge); }
+  #status, #error { color: var(--ink-soft); font-size: 13px; margin: 8px 0; }
+  #error { color: var(--seal); white-space: pre-wrap; }
+  #emptymsg { color: var(--ink-soft); font-size: 15px; margin-top: 40px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="left">
+    <a class="back" href="index.html">&larr; Collage</a>
+    <h1>Atlas</h1>
+    <span class="sub" id="sub"></span>
+  </div>
+  <div class="controls">
+    <div class="pills" id="filterPills">
+      <button data-filter="needs" class="active">Needs</button>
+      <button data-filter="all">All seen here</button>
+    </div>
+    <div class="pills" id="sortPills">
+      <button data-sort="recent" class="active">Most recent</button>
+      <button data-sort="az">A–Z</button>
+      <button data-sort="size">By size</button>
+    </div>
+  </div>
+</div>
+<div id="error" style="display:none;"></div>
+<div id="grid"></div>
+<div id="emptymsg" style="display:none;"></div>
+<div style="margin-top:28px;color:var(--ink-soft);font-size:11px;text-align:center;line-height:1.5;">
+  Bundled illustrations © Teddy Warner
+  (<a href="https://github.com/Twarner491/AvianVisitors" target="_blank" rel="noopener" style="color:var(--ink-soft);">AvianVisitors</a>);
+  uploaded images © their contributors. All
+  <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener" style="color:var(--ink-soft);">CC&nbsp;BY-NC-SA&nbsp;4.0</a>.
+  Per-bird credit on each species page.
+</div>
+
+<script src="app.js"></script>
+<script>
+let ROWS = [];
+let CFG = null;
+let filter = "needs";
+let sortBy = "recent";
+
+function fmtShort(iso) {
+  if (!iso) return "";
+  const d = new Date(iso.replace(" ", "T"));
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+const wikiUrl = (sci) => "https://en.wikipedia.org/wiki/" + encodeURIComponent((sci || "").replace(/ /g, "_"));
+const ebirdUrl = (code) => code ? "https://ebird.org/species/" + encodeURIComponent(code) : "https://ebird.org/explore";
+
+function render() {
+  const grid = document.getElementById("grid");
+  const emptyEl = document.getElementById("emptymsg");
+  grid.innerHTML = "";
+
+  let rows = ROWS.slice();
+  if (filter === "needs") rows = rows.filter(needsAny);
+  if (sortBy === "az") rows.sort((a, b) => a.comName.localeCompare(b.comName));
+  else if (sortBy === "size") rows.sort((a, b) => b.lengthIn - a.lengthIn);
+  else rows.sort((a, b) => (b.lastSeen || "").localeCompare(a.lastSeen || ""));
+
+  document.getElementById("sub").textContent =
+    `${rows.length} of ${ROWS.length} species recorded here`;
+
+  if (!rows.length) {
+    emptyEl.style.display = "block";
+    emptyEl.textContent = ROWS.length
+      ? "No current needs among the species recorded here."
+      : "Nothing recorded yet — the atlas fills in as sightings are fetched.";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  for (const r of rows) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const go = document.createElement("a");
+    go.className = "go";
+    go.href = speciesLinkParams(r);
+    const img = document.createElement("img");
+    img.src = r.img;
+    img.alt = r.comName;
+    img.onerror = () => { img.onerror = null; img.src = "/images/placeholder.svg"; };
+    const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = r.comName;
+    const sc = document.createElement("div"); sc.className = "sc"; sc.textContent = r.sciName;
+    const when = document.createElement("div"); when.className = "when";
+    when.textContent = `last ${fmtShort(r.lastSeen)} · first ${fmtShort(r.firstSeen)}`;
+    const dots = document.createElement("div"); dots.className = "dots";
+    peopleOf(CFG).forEach((p, i) => {
+      if (!needsFor(r, p.id)) return;
+      const d = document.createElement("span"); d.className = "dot";
+      d.style.background = personColor(i); d.title = `${p.label} needs`;
+      dots.appendChild(d);
+    });
+    go.append(img, nm, sc, when, dots);
+
+    const links = document.createElement("div"); links.className = "links";
+    const wiki = document.createElement("a"); wiki.textContent = "wiki";
+    wiki.href = wikiUrl(r.sciName); wiki.target = "_blank"; wiki.rel = "noopener";
+    const eb = document.createElement("a"); eb.textContent = "eBird";
+    eb.href = ebirdUrl(r.speciesCode); eb.target = "_blank"; eb.rel = "noopener";
+    links.append(wiki, eb);
+
+    card.append(go, links);
+    grid.appendChild(card);
+  }
+}
+
+document.getElementById("filterPills").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  filter = b.dataset.filter;
+  e.currentTarget.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  render();
+});
+document.getElementById("sortPills").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  sortBy = b.dataset.sort;
+  e.currentTarget.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  render();
+});
+
+Promise.all([
+  getJSON("/api/config").then((c) => { CFG = c; applyTheme(c.theme); }).catch(() => {}),
+  getJSON("/api/atlas").then((rows) => { ROWS = rows; }),
+]).then(render)
+  .catch((e) => {
+    document.getElementById("error").style.display = "block";
+    document.getElementById("error").textContent = "Couldn't load the atlas:\n" + e.message;
+  });
+</script>
+</body>
+</html>

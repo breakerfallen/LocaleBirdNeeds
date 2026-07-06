@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Species detail</title>
+<script>try{if(localStorage.getItem("nn-theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}</script>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+  :root {
+    --paper: #f3ead2; --paper-edge: #e7d9b6; --ink: #2b271f; --ink-soft: #7c7161; --seal: #a2402f;
+  }
+  html.dark {
+    --paper: #000000; --paper-edge: #262626; --ink: #cbc5b6; --ink-soft: #98917f; --seal: #e79a86;
+  }
+  html.dark body { background: #000000; }
+  html.dark img[src*="/vendor/silhouettes/"] { filter: invert(0.82) brightness(1.05); }
+  html.dark #map { background: #12100c; }
+  .credit { font-size: 11.5px; color: var(--ink-soft); margin-top: 2px; }
+  .credit a { color: var(--ink-soft); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 20px 24px 40px;
+    background: radial-gradient(120% 120% at 50% 0%, #f6efdb 0%, var(--paper) 60%, var(--paper-edge) 100%);
+    color: var(--ink);
+    font-family: "Hoefler Text", "Songti SC", "Yu Mincho", Georgia, "Times New Roman", serif;
+  }
+  a.back { color: var(--ink-soft); text-decoration: none; font-size: 14px; }
+  .head { display: flex; gap: 22px; align-items: center; margin: 14px 0 22px; flex-wrap: wrap; }
+  .art { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .art img { width: 168px; height: 168px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(60,45,20,0.2)); }
+  .poses { display: none; border: 1px solid var(--paper-edge); border-radius: 999px; overflow: hidden; }
+  .poses button { font-family: inherit; font-size: 12px; padding: 4px 12px; border: none; background: transparent; color: var(--ink-soft); cursor: pointer; }
+  .poses button.active { background: var(--ink); color: var(--paper); }
+  h1 { margin: 0 0 4px; font-size: 27px; font-weight: 600; }
+  .sci { color: var(--ink-soft); font-style: italic; margin-bottom: 6px; }
+  .needs { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+  .chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; color: #f2efe7; }
+  .ext { font-size: 12px; color: var(--ink-soft); text-decoration: none; border: 1px solid var(--paper-edge); border-radius: 999px; padding: 3px 10px; }
+  #map { height: 340px; border-radius: 10px; margin-bottom: 22px; background: #e7d9b6; border: 1px solid var(--paper-edge); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--paper-edge); }
+  th { color: var(--ink-soft); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  #status { color: var(--ink-soft); }
+  #error { color: var(--seal); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<a class="back" href="index.html">&larr; Back</a>
+<div class="head">
+  <div class="art">
+    <img id="art" src="/images/placeholder.svg" alt="">
+    <div class="poses" id="poses">
+      <button data-pose="perched" class="active">Perched</button>
+      <button data-pose="flight">In flight</button>
+    </div>
+    <div class="credit" id="credit"></div>
+  </div>
+  <div>
+    <h1 id="common"></h1>
+    <div class="sci" id="sci"></div>
+    <div class="needs" id="needs"></div>
+    <div id="status">Loading sightings…</div>
+  </div>
+</div>
+<div id="map"></div>
+<table id="table" style="display:none;">
+  <thead><tr><th>Date</th><th>Hotspot</th><th>Count</th></tr></thead>
+  <tbody id="tbody"></tbody>
+</table>
+<div id="error" style="display:none;"></div>
+
+<script src="app.js"></script>
+<script src="vendor/leaflet.js"></script>
+<script>
+async function main() {
+  const params = new URLSearchParams(location.search);
+  const code = params.get("code");
+  const common = params.get("common") || code || "";
+  const sci = params.get("sci") || "";
+
+  document.getElementById("common").textContent = common;
+  document.getElementById("sci").textContent = sci;
+  document.title = common;
+
+  try {
+    const cfg = await fetchConfig();
+    applyTheme(cfg.theme);
+    const { sightings, info } = await fetchSpecies(code);
+    const artEl = document.getElementById("art");
+    const cr = info && info.credit;
+    if (cr) {
+      const el = document.getElementById("credit");
+      el.innerHTML = `Illustration: ${escapeHTML(cr.author)} · ` +
+        `<a href="${escapeHTML(cr.licenseUrl || "#")}" target="_blank" rel="noopener">${escapeHTML(cr.license || "")}</a>`;
+    }
+    const perched = (info && info.img) || "/images/placeholder.svg";
+    const flight = info && info.imgFlight;
+    artEl.src = perched;
+    artEl.alt = common;
+
+    const needsEl = document.getElementById("needs");
+    peopleOf(cfg).forEach((p, i) => {
+      if (!needsFor(info, p.id)) return;
+      const c = document.createElement("span");
+      c.className = "chip";
+      c.style.background = personColor(i);
+      c.textContent = `${p.label} needs this`;
+      needsEl.appendChild(c);
+    });
+    const mkExt = (label, url) => { const a = document.createElement("a"); a.className = "ext"; a.textContent = label; a.href = url; a.target = "_blank"; a.rel = "noopener"; return a; };
+    if (sci) needsEl.appendChild(mkExt("Wikipedia", "https://en.wikipedia.org/wiki/" + encodeURIComponent(sci.replace(/ /g, "_"))));
+    needsEl.appendChild(mkExt("eBird", code ? "https://ebird.org/species/" + encodeURIComponent(code) : "https://ebird.org/explore"));
+
+    if (flight) {
+      const poses = document.getElementById("poses");
+      poses.style.display = "inline-flex";
+      poses.addEventListener("click", (e) => {
+        const b = e.target.closest("button"); if (!b) return;
+        artEl.src = b.dataset.pose === "flight" ? flight : perched;
+        poses.querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+      });
+    }
+
+    sightings.sort((a, b) => (a.obsDt < b.obsDt ? 1 : -1));
+    document.getElementById("status").textContent =
+      `${sightings.length} sighting${sightings.length === 1 ? "" : "s"} in the last ${cfg.back_days} days within ${cfg.dist_miles} mi`;
+
+    let map = null, pts = [];
+    try {
+      map = L.map("map");
+      const dark = document.documentElement.classList.contains("dark");
+      const tiles = dark
+        ? { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+            attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+            subdomains: "abcd", maxZoom: 20 }
+        : { url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            attribution: "&copy; OpenStreetMap contributors",
+            subdomains: "abc", maxZoom: 19 };
+      L.tileLayer(tiles.url, {
+        attribution: tiles.attribution, subdomains: tiles.subdomains, maxZoom: tiles.maxZoom,
+      }).addTo(map);
+    } catch { document.getElementById("map").style.display = "none"; }
+
+    const tbody = document.getElementById("tbody");
+    for (const s of sightings) {
+      if (map && typeof s.lat === "number" && typeof s.lng === "number") {
+        L.marker([s.lat, s.lng]).addTo(map)
+          .bindPopup(`<b>${escapeHTML(s.locName)}</b><br>${fmtDate(s.obsDt)} &middot; ${escapeHTML(String(s.howMany || "X"))} reported`);
+        pts.push([s.lat, s.lng]);
+      }
+      const tr = document.createElement("tr");
+      const td = (t) => { const c = document.createElement("td"); c.textContent = t; return c; };
+      tr.append(td(fmtDate(s.obsDt)), td(s.locName || ""), td(s.howMany == null ? "X" : s.howMany));
+      tbody.appendChild(tr);
+    }
+    if (map) {
+      if (pts.length) map.fitBounds(pts, { padding: [30, 30] });
+      else map.setView([cfg.lat, cfg.lng], 9);
+    }
+    document.getElementById("table").style.display = sightings.length ? "table" : "none";
+  } catch (err) {
+    document.getElementById("error").style.display = "block";
+    document.getElementById("error").textContent = "Couldn't load sightings:\n" + err.message;
+    document.getElementById("status").textContent = "";
+  }
+}
+main();
+</script>
+</body>
+</html>

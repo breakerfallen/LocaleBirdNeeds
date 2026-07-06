@@ -1,0 +1,24 @@
+# Private — NEVER commit. Holds the eBird API key (and any image-provider
+# keys). Copy config.example.json to config.json to set up a new install.
+config.json
+
+# Personal data & runtime state — regenerated/uploaded per household.
+data/life_*.json
+data/settings.json
+data/cache_nearby.json
+data/atlas.json
+data/taxonomy.json
+data/*.bak
+*.bak
+*.tmp
+
+# OS noise
+.DS_Store
+
+# The bundled AvianVisitors illustrations (~290 MB of sci-name-slug files like
+# corvus-corax_perched.png) are NOT committed here — the same art already lives
+# in this repository under avian/assets/illustrations/ (branch avian-visitors).
+# Run  python3 fetch_bundled_art.py  once after cloning to copy them in.
+# Code-named uploads (e.g. norgos_perched.png) are not matched and stay tracked.
+images/*-*_perched.png
+images/*-*_flight.png

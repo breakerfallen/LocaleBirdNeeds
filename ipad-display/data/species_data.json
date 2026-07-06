@@ -1,0 +1,1722 @@
+{
+"acanthis flammea": {
+"common": "Common Redpoll",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"accipiter cooperii": {
+"common": "Cooper's Hawk",
+"lengthIn": 16.5,
+"shape": "raptor"
+},
+"accipiter striatus": {
+"common": "Sharp-shinned Hawk",
+"lengthIn": 11,
+"shape": "raptor"
+},
+"actitis macularius": {
+"common": "Spotted Sandpiper",
+"lengthIn": 7.5,
+"shape": "shorebird"
+},
+"aechmophorus clarkii": {
+"common": "Clark's Grebe",
+"lengthIn": 25,
+"shape": "waterfowl"
+},
+"aechmophorus occidentalis": {
+"common": "Western Grebe",
+"lengthIn": 25,
+"shape": "waterfowl"
+},
+"aegolius acadicus": {
+"common": "Northern Saw-whet Owl",
+"lengthIn": 8,
+"shape": "owl"
+},
+"aeronautes saxatalis": {
+"common": "White-throated Swift",
+"lengthIn": 6.5,
+"shape": "swallow"
+},
+"agelaius phoeniceus": {
+"common": "Red-winged Blackbird",
+"lengthIn": 8.75,
+"shape": "songbird"
+},
+"aix sponsa": {
+"common": "Wood Duck",
+"lengthIn": 18.5,
+"shape": "waterfowl"
+},
+"ammodramus savannarum": {
+"common": "Grasshopper Sparrow",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"ammospiza nelsoni": {
+"common": "Nelson's Sparrow",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"amphispiza bilineata": {
+"common": "Black-throated Sparrow",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"anas acuta": {
+"common": "Northern Pintail",
+"lengthIn": 21,
+"shape": "waterfowl"
+},
+"anas crecca": {
+"common": "Green-winged Teal",
+"lengthIn": 14,
+"shape": "waterfowl"
+},
+"anas platyrhynchos": {
+"common": "Mallard",
+"lengthIn": 23,
+"shape": "waterfowl"
+},
+"anser albifrons": {
+"common": "Greater White-fronted Goose",
+"lengthIn": 28,
+"shape": "waterfowl"
+},
+"anser anser": {
+"common": "Graylag Goose",
+"lengthIn": 33,
+"shape": "waterfowl"
+},
+"anser caerulescens": {
+"common": "Snow Goose",
+"lengthIn": 28,
+"shape": "waterfowl"
+},
+"anser rossii": {
+"common": "Ross's Goose",
+"lengthIn": 23,
+"shape": "waterfowl"
+},
+"anthus rubescens": {
+"common": "American Pipit",
+"lengthIn": 6.5,
+"shape": "songbird"
+},
+"antigone canadensis": {
+"common": "Sandhill Crane",
+"lengthIn": 46,
+"shape": "wader"
+},
+"aphelocoma californica": {
+"common": "California Scrub-Jay",
+"lengthIn": 11.5,
+"shape": "corvid"
+},
+"aphelocoma woodhouseii": {
+"common": "Woodhouse's Scrub-Jay",
+"lengthIn": 11.5,
+"shape": "corvid"
+},
+"aquila chrysaetos": {
+"common": "Golden Eagle",
+"lengthIn": 30,
+"shape": "raptor"
+},
+"archilochus alexandri": {
+"common": "Black-chinned Hummingbird",
+"lengthIn": 3.75,
+"shape": "hummingbird"
+},
+"ardea alba": {
+"common": "Great Egret",
+"lengthIn": 39,
+"shape": "wader"
+},
+"ardea herodias": {
+"common": "Great Blue Heron",
+"lengthIn": 46,
+"shape": "wader"
+},
+"ardea ibis": {
+"common": "Cattle Egret",
+"lengthIn": 20,
+"shape": "wader"
+},
+"artemisiospiza belli": {
+"common": "Bell's Sparrow",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"artemisiospiza nevadensis": {
+"common": "Sagebrush Sparrow",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"asio flammeus": {
+"common": "Short-eared Owl",
+"lengthIn": 15,
+"shape": "owl"
+},
+"asio otus": {
+"common": "Long-eared Owl",
+"lengthIn": 15,
+"shape": "owl"
+},
+"astur atricapillus": {
+"common": "Northern Goshawk",
+"lengthIn": 21,
+"shape": "raptor"
+},
+"astur cooperii": {
+"common": "Cooper's Hawk",
+"lengthIn": 16.5,
+"shape": "raptor"
+},
+"astur gentilis": {
+"common": "American Goshawk",
+"lengthIn": 21,
+"shape": "raptor"
+},
+"athene cunicularia": {
+"common": "Burrowing Owl",
+"lengthIn": 9.5,
+"shape": "owl"
+},
+"aythya affinis": {
+"common": "Lesser Scaup",
+"lengthIn": 16.5,
+"shape": "waterfowl"
+},
+"aythya americana": {
+"common": "Redhead",
+"lengthIn": 19,
+"shape": "waterfowl"
+},
+"aythya collaris": {
+"common": "Ring-necked Duck",
+"lengthIn": 17,
+"shape": "waterfowl"
+},
+"aythya marila": {
+"common": "Greater Scaup",
+"lengthIn": 18,
+"shape": "waterfowl"
+},
+"aythya valisineria": {
+"common": "Canvasback",
+"lengthIn": 21,
+"shape": "waterfowl"
+},
+"baeolophus inornatus": {
+"common": "Oak Titmouse",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"baeolophus ridgwayi": {
+"common": "Juniper Titmouse",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"bartramia longicauda": {
+"common": "Upland Sandpiper",
+"lengthIn": 12,
+"shape": "shorebird"
+},
+"bombycilla cedrorum": {
+"common": "Cedar Waxwing",
+"lengthIn": 7.25,
+"shape": "songbird"
+},
+"bombycilla garrulus": {
+"common": "Bohemian Waxwing",
+"lengthIn": 8.25,
+"shape": "songbird"
+},
+"botaurus lentiginosus": {
+"common": "American Bittern",
+"lengthIn": 28,
+"shape": "wader"
+},
+"branta bernicla": {
+"common": "Brant",
+"lengthIn": 25,
+"shape": "waterfowl"
+},
+"branta canadensis": {
+"common": "Canada Goose",
+"lengthIn": 40,
+"shape": "waterfowl"
+},
+"branta hutchinsii": {
+"common": "Cackling Goose",
+"lengthIn": 25,
+"shape": "waterfowl"
+},
+"bubo virginianus": {
+"common": "Great Horned Owl",
+"lengthIn": 22,
+"shape": "owl"
+},
+"bubulcus ibis": {
+"common": "Cattle Egret",
+"lengthIn": 20,
+"shape": "wader"
+},
+"bucephala albeola": {
+"common": "Bufflehead",
+"lengthIn": 13.5,
+"shape": "waterfowl"
+},
+"bucephala clangula": {
+"common": "Common Goldeneye",
+"lengthIn": 18.5,
+"shape": "waterfowl"
+},
+"bucephala islandica": {
+"common": "Barrow's Goldeneye",
+"lengthIn": 18,
+"shape": "waterfowl"
+},
+"buteo jamaicensis": {
+"common": "Red-tailed Hawk",
+"lengthIn": 19,
+"shape": "raptor"
+},
+"buteo lagopus": {
+"common": "Rough-legged Hawk",
+"lengthIn": 21,
+"shape": "raptor"
+},
+"buteo lineatus": {
+"common": "Red-shouldered Hawk",
+"lengthIn": 17,
+"shape": "raptor"
+},
+"buteo platypterus": {
+"common": "Broad-winged Hawk",
+"lengthIn": 15,
+"shape": "raptor"
+},
+"buteo regalis": {
+"common": "Ferruginous Hawk",
+"lengthIn": 23,
+"shape": "raptor"
+},
+"buteo swainsoni": {
+"common": "Swainson's Hawk",
+"lengthIn": 19,
+"shape": "raptor"
+},
+"butorides virescens": {
+"common": "Green Heron",
+"lengthIn": 18,
+"shape": "wader"
+},
+"calamospiza melanocorys": {
+"common": "Lark Bunting",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"calidris alba": {
+"common": "Sanderling",
+"lengthIn": 8,
+"shape": "shorebird"
+},
+"calidris alpina": {
+"common": "Dunlin",
+"lengthIn": 8.5,
+"shape": "shorebird"
+},
+"calidris bairdii": {
+"common": "Baird's Sandpiper",
+"lengthIn": 7.5,
+"shape": "shorebird"
+},
+"calidris fuscicollis": {
+"common": "White-rumped Sandpiper",
+"lengthIn": 7.5,
+"shape": "shorebird"
+},
+"calidris mauri": {
+"common": "Western Sandpiper",
+"lengthIn": 6.5,
+"shape": "shorebird"
+},
+"calidris minutilla": {
+"common": "Least Sandpiper",
+"lengthIn": 6,
+"shape": "shorebird"
+},
+"calidris pusilla": {
+"common": "Semipalmated Sandpiper",
+"lengthIn": 6.25,
+"shape": "shorebird"
+},
+"callipepla californica": {
+"common": "California Quail",
+"lengthIn": 10,
+"shape": "gamebird"
+},
+"callipepla squamata": {
+"common": "Scaled Quail",
+"lengthIn": 10,
+"shape": "gamebird"
+},
+"calothorax lucifer": {
+"common": "Lucifer Hummingbird",
+"lengthIn": 3.5,
+"shape": "hummingbird"
+},
+"calypte anna": {
+"common": "Anna's Hummingbird",
+"lengthIn": 4,
+"shape": "hummingbird"
+},
+"calypte costae": {
+"common": "Costa's Hummingbird",
+"lengthIn": 3.5,
+"shape": "hummingbird"
+},
+"caracara plancus": {
+"common": "Crested Caracara",
+"lengthIn": 23,
+"shape": "raptor"
+},
+"cardellina pusilla": {
+"common": "Wilson's Warbler",
+"lengthIn": 4.75,
+"shape": "songbird"
+},
+"cardellina rubrifrons": {
+"common": "Red-faced Warbler",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"cardinalis cardinalis": {
+"common": "Northern Cardinal",
+"lengthIn": 8.75,
+"shape": "songbird"
+},
+"cathartes aura": {
+"common": "Turkey Vulture",
+"lengthIn": 27,
+"shape": "raptor"
+},
+"catharus guttatus": {
+"common": "Hermit Thrush",
+"lengthIn": 6.75,
+"shape": "songbird"
+},
+"catharus ustulatus": {
+"common": "Swainson's Thrush",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"catherpes mexicanus": {
+"common": "Canyon Wren",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"centrocercus urophasianus": {
+"common": "Greater Sage-Grouse",
+"lengthIn": 26,
+"shape": "gamebird"
+},
+"certhia americana": {
+"common": "Brown Creeper",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"chaetura pelagica": {
+"common": "Chimney Swift",
+"lengthIn": 5.25,
+"shape": "swallow"
+},
+"chaetura vauxi": {
+"common": "Vaux's Swift",
+"lengthIn": 4.75,
+"shape": "swallow"
+},
+"charadrius semipalmatus": {
+"common": "Semipalmated Plover",
+"lengthIn": 7.25,
+"shape": "shorebird"
+},
+"charadrius vociferus": {
+"common": "Killdeer",
+"lengthIn": 10.5,
+"shape": "shorebird"
+},
+"chlidonias niger": {
+"common": "Black Tern",
+"lengthIn": 9.75,
+"shape": "gull"
+},
+"chondestes grammacus": {
+"common": "Lark Sparrow",
+"lengthIn": 6.5,
+"shape": "songbird"
+},
+"chordeiles minor": {
+"common": "Common Nighthawk",
+"lengthIn": 9.5,
+"shape": "swallow"
+},
+"chroicocephalus philadelphia": {
+"common": "Bonaparte's Gull",
+"lengthIn": 13,
+"shape": "gull"
+},
+"cinclus mexicanus": {
+"common": "American Dipper",
+"lengthIn": 7.5,
+"shape": "songbird"
+},
+"circus hudsonius": {
+"common": "Northern Harrier",
+"lengthIn": 18,
+"shape": "raptor"
+},
+"cistothorus palustris": {
+"common": "Marsh Wren",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"coccothraustes vespertinus": {
+"common": "Evening Grosbeak",
+"lengthIn": 8,
+"shape": "songbird"
+},
+"coccyzus americanus": {
+"common": "Yellow-billed Cuckoo",
+"lengthIn": 12,
+"shape": "songbird"
+},
+"colaptes auratus": {
+"common": "Northern Flicker",
+"lengthIn": 12.5,
+"shape": "woodpecker"
+},
+"colinus virginianus": {
+"common": "Northern Bobwhite",
+"lengthIn": 9.75,
+"shape": "gamebird"
+},
+"columba livia": {
+"common": "Rock Pigeon",
+"lengthIn": 12.5,
+"shape": "dove"
+},
+"columbina inca": {
+"common": "Inca Dove",
+"lengthIn": 8.25,
+"shape": "dove"
+},
+"columbina passerina": {
+"common": "Common Ground Dove",
+"lengthIn": 6.5,
+"shape": "dove"
+},
+"contopus cooperi": {
+"common": "Olive-sided Flycatcher",
+"lengthIn": 7.5,
+"shape": "songbird"
+},
+"contopus sordidulus": {
+"common": "Western Wood-Pewee",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"coragyps atratus": {
+"common": "Black Vulture",
+"lengthIn": 25,
+"shape": "raptor"
+},
+"corthylio calendula": {
+"common": "Ruby-crowned Kinglet",
+"lengthIn": 4.25,
+"shape": "songbird"
+},
+"corvus brachyrhynchos": {
+"common": "American Crow",
+"lengthIn": 17.5,
+"shape": "corvid"
+},
+"corvus corax": {
+"common": "Common Raven",
+"lengthIn": 24,
+"shape": "corvid"
+},
+"cyanocitta cristata": {
+"common": "Blue Jay",
+"lengthIn": 11,
+"shape": "corvid"
+},
+"cyanocitta stelleri": {
+"common": "Steller's Jay",
+"lengthIn": 11.5,
+"shape": "corvid"
+},
+"cygnus buccinator": {
+"common": "Trumpeter Swan",
+"lengthIn": 60,
+"shape": "waterfowl"
+},
+"cygnus columbianus": {
+"common": "Tundra Swan",
+"lengthIn": 52,
+"shape": "waterfowl"
+},
+"cygnus olor": {
+"common": "Mute Swan",
+"lengthIn": 55,
+"shape": "waterfowl"
+},
+"cypseloides niger": {
+"common": "Black Swift",
+"lengthIn": 7.25,
+"shape": "swallow"
+},
+"dendragapus obscurus": {
+"common": "Dusky Grouse",
+"lengthIn": 20,
+"shape": "gamebird"
+},
+"dolichonyx oryzivorus": {
+"common": "Bobolink",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"dryobates nuttallii": {
+"common": "Nuttall's Woodpecker",
+"lengthIn": 7.5,
+"shape": "woodpecker"
+},
+"dryobates pubescens": {
+"common": "Downy Woodpecker",
+"lengthIn": 6.75,
+"shape": "woodpecker"
+},
+"dryobates scalaris": {
+"common": "Ladder-backed Woodpecker",
+"lengthIn": 7.25,
+"shape": "woodpecker"
+},
+"dryobates villosus": {
+"common": "Hairy Woodpecker",
+"lengthIn": 9.25,
+"shape": "woodpecker"
+},
+"dryocopus pileatus": {
+"common": "Pileated Woodpecker",
+"lengthIn": 16.5,
+"shape": "woodpecker"
+},
+"dumetella carolinensis": {
+"common": "Gray Catbird",
+"lengthIn": 8.5,
+"shape": "songbird"
+},
+"egretta caerulea": {
+"common": "Little Blue Heron",
+"lengthIn": 24,
+"shape": "wader"
+},
+"egretta thula": {
+"common": "Snowy Egret",
+"lengthIn": 24,
+"shape": "wader"
+},
+"elanus leucurus": {
+"common": "White-tailed Kite",
+"lengthIn": 15,
+"shape": "raptor"
+},
+"empidonax difficilis": {
+"common": "Pacific-slope Flycatcher",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"empidonax hammondii": {
+"common": "Hammond's Flycatcher",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"empidonax minimus": {
+"common": "Least Flycatcher",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"empidonax oberholseri": {
+"common": "Dusky Flycatcher",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"empidonax traillii": {
+"common": "Willow Flycatcher",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"empidonax wrightii": {
+"common": "Gray Flycatcher",
+"lengthIn": 6,
+"shape": "songbird"
+},
+"eremophila alpestris": {
+"common": "Horned Lark",
+"lengthIn": 7.25,
+"shape": "songbird"
+},
+"euphagus cyanocephalus": {
+"common": "Brewer's Blackbird",
+"lengthIn": 9,
+"shape": "songbird"
+},
+"falco columbarius": {
+"common": "Merlin",
+"lengthIn": 10,
+"shape": "falcon"
+},
+"falco mexicanus": {
+"common": "Prairie Falcon",
+"lengthIn": 16,
+"shape": "falcon"
+},
+"falco peregrinus": {
+"common": "Peregrine Falcon",
+"lengthIn": 16,
+"shape": "falcon"
+},
+"falco sparverius": {
+"common": "American Kestrel",
+"lengthIn": 9,
+"shape": "falcon"
+},
+"gallinago delicata": {
+"common": "Wilson's Snipe",
+"lengthIn": 11,
+"shape": "shorebird"
+},
+"gavia immer": {
+"common": "Common Loon",
+"lengthIn": 32,
+"shape": "waterfowl"
+},
+"geothlypis formosa": {
+"common": "Kentucky Warbler",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"geothlypis tolmiei": {
+"common": "MacGillivray's Warbler",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"geothlypis trichas": {
+"common": "Common Yellowthroat",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"glaucidium gnoma": {
+"common": "Northern Pygmy-Owl",
+"lengthIn": 6.75,
+"shape": "owl"
+},
+"gymnogyps californianus": {
+"common": "California Condor",
+"lengthIn": 46,
+"shape": "raptor"
+},
+"gymnorhinus cyanocephalus": {
+"common": "Pinyon Jay",
+"lengthIn": 10.5,
+"shape": "corvid"
+},
+"haemorhous cassinii": {
+"common": "Cassin's Finch",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"haemorhous mexicanus": {
+"common": "House Finch",
+"lengthIn": 6,
+"shape": "songbird"
+},
+"haemorhous purpureus": {
+"common": "Purple Finch",
+"lengthIn": 6,
+"shape": "songbird"
+},
+"haliaeetus leucocephalus": {
+"common": "Bald Eagle",
+"lengthIn": 31,
+"shape": "raptor"
+},
+"hesperiphona vespertina": {
+"common": "Evening Grosbeak",
+"lengthIn": 8,
+"shape": "songbird"
+},
+"himantopus mexicanus": {
+"common": "Black-necked Stilt",
+"lengthIn": 14,
+"shape": "shorebird"
+},
+"hirundo rustica": {
+"common": "Barn Swallow",
+"lengthIn": 6.75,
+"shape": "swallow"
+},
+"hydroprogne caspia": {
+"common": "Caspian Tern",
+"lengthIn": 21,
+"shape": "gull"
+},
+"icteria virens": {
+"common": "Yellow-breasted Chat",
+"lengthIn": 7.5,
+"shape": "songbird"
+},
+"icterus bullockii": {
+"common": "Bullock's Oriole",
+"lengthIn": 8.75,
+"shape": "songbird"
+},
+"icterus cucullatus": {
+"common": "Hooded Oriole",
+"lengthIn": 8,
+"shape": "songbird"
+},
+"icterus galbula": {
+"common": "Baltimore Oriole",
+"lengthIn": 8.75,
+"shape": "songbird"
+},
+"icterus parisorum": {
+"common": "Scott's Oriole",
+"lengthIn": 9,
+"shape": "songbird"
+},
+"ixoreus naevius": {
+"common": "Varied Thrush",
+"lengthIn": 9.5,
+"shape": "songbird"
+},
+"junco hyemalis": {
+"common": "Dark-eyed Junco",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"lanius borealis": {
+"common": "Northern Shrike",
+"lengthIn": 9.5,
+"shape": "songbird"
+},
+"lanius ludovicianus": {
+"common": "Loggerhead Shrike",
+"lengthIn": 9,
+"shape": "songbird"
+},
+"larus argentatus": {
+"common": "Herring Gull",
+"lengthIn": 25,
+"shape": "gull"
+},
+"larus californicus": {
+"common": "California Gull",
+"lengthIn": 21,
+"shape": "gull"
+},
+"larus delawarensis": {
+"common": "Ring-billed Gull",
+"lengthIn": 18,
+"shape": "gull"
+},
+"larus glaucescens": {
+"common": "Glaucous-winged Gull",
+"lengthIn": 26,
+"shape": "gull"
+},
+"larus heermanni": {
+"common": "Heermann's Gull",
+"lengthIn": 19,
+"shape": "gull"
+},
+"larus occidentalis": {
+"common": "Western Gull",
+"lengthIn": 25,
+"shape": "gull"
+},
+"leiothlypis celata": {
+"common": "Orange-crowned Warbler",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"leiothlypis luciae": {
+"common": "Lucy's Warbler",
+"lengthIn": 4.25,
+"shape": "songbird"
+},
+"leiothlypis ruficapilla": {
+"common": "Nashville Warbler",
+"lengthIn": 4.75,
+"shape": "songbird"
+},
+"leiothlypis virginiae": {
+"common": "Virginia's Warbler",
+"lengthIn": 4.75,
+"shape": "songbird"
+},
+"leuconotopicus villosus": {
+"common": "Hairy Woodpecker",
+"lengthIn": 9.25,
+"shape": "woodpecker"
+},
+"leucophaeus atricilla": {
+"common": "Laughing Gull",
+"lengthIn": 16.5,
+"shape": "gull"
+},
+"leucophaeus pipixcan": {
+"common": "Franklin's Gull",
+"lengthIn": 14.5,
+"shape": "gull"
+},
+"leucosticte atrata": {
+"common": "Black Rosy-Finch",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"leucosticte australis": {
+"common": "Brown-capped Rosy-Finch",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"leucosticte tephrocotis": {
+"common": "Gray-crowned Rosy-Finch",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"limnodromus scolopaceus": {
+"common": "Long-billed Dowitcher",
+"lengthIn": 11.5,
+"shape": "shorebird"
+},
+"limosa fedoa": {
+"common": "Marbled Godwit",
+"lengthIn": 18,
+"shape": "shorebird"
+},
+"lophodytes cucullatus": {
+"common": "Hooded Merganser",
+"lengthIn": 18,
+"shape": "waterfowl"
+},
+"loxia curvirostra": {
+"common": "Red Crossbill",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"mareca americana": {
+"common": "American Wigeon",
+"lengthIn": 20,
+"shape": "waterfowl"
+},
+"mareca strepera": {
+"common": "Gadwall",
+"lengthIn": 20,
+"shape": "waterfowl"
+},
+"megaceryle alcyon": {
+"common": "Belted Kingfisher",
+"lengthIn": 13,
+"shape": "woodpecker"
+},
+"megascops asio": {
+"common": "Eastern Screech-Owl",
+"lengthIn": 8.5,
+"shape": "owl"
+},
+"megascops kennicottii": {
+"common": "Western Screech-Owl",
+"lengthIn": 8.5,
+"shape": "owl"
+},
+"melanerpes carolinus": {
+"common": "Red-bellied Woodpecker",
+"lengthIn": 9.25,
+"shape": "woodpecker"
+},
+"melanerpes erythrocephalus": {
+"common": "Red-headed Woodpecker",
+"lengthIn": 9.25,
+"shape": "woodpecker"
+},
+"melanerpes formicivorus": {
+"common": "Acorn Woodpecker",
+"lengthIn": 9,
+"shape": "woodpecker"
+},
+"melanerpes lewis": {
+"common": "Lewis's Woodpecker",
+"lengthIn": 10.75,
+"shape": "woodpecker"
+},
+"meleagris gallopavo": {
+"common": "Wild Turkey",
+"lengthIn": 46,
+"shape": "gamebird"
+},
+"melospiza georgiana": {
+"common": "Swamp Sparrow",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"melospiza lincolnii": {
+"common": "Lincoln's Sparrow",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"melospiza melodia": {
+"common": "Song Sparrow",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"melozone aberti": {
+"common": "Abert's Towhee",
+"lengthIn": 9.5,
+"shape": "songbird"
+},
+"melozone crissalis": {
+"common": "California Towhee",
+"lengthIn": 9,
+"shape": "songbird"
+},
+"melozone fusca": {
+"common": "Canyon Towhee",
+"lengthIn": 8.5,
+"shape": "songbird"
+},
+"mergus merganser": {
+"common": "Common Merganser",
+"lengthIn": 25,
+"shape": "waterfowl"
+},
+"mergus serrator": {
+"common": "Red-breasted Merganser",
+"lengthIn": 23,
+"shape": "waterfowl"
+},
+"mimus polyglottos": {
+"common": "Northern Mockingbird",
+"lengthIn": 10,
+"shape": "songbird"
+},
+"mniotilta varia": {
+"common": "Black-and-white Warbler",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"molothrus ater": {
+"common": "Brown-headed Cowbird",
+"lengthIn": 7.5,
+"shape": "songbird"
+},
+"myadestes townsendi": {
+"common": "Townsend's Solitaire",
+"lengthIn": 8.5,
+"shape": "songbird"
+},
+"myiarchus cinerascens": {
+"common": "Ash-throated Flycatcher",
+"lengthIn": 8.25,
+"shape": "songbird"
+},
+"nannopterum auritum": {
+"common": "Double-crested Cormorant",
+"lengthIn": 33,
+"shape": "wader"
+},
+"nannopterum brasilianum": {
+"common": "Neotropic Cormorant",
+"lengthIn": 25,
+"shape": "wader"
+},
+"nucifraga columbiana": {
+"common": "Clark's Nutcracker",
+"lengthIn": 12,
+"shape": "corvid"
+},
+"numenius americanus": {
+"common": "Long-billed Curlew",
+"lengthIn": 23,
+"shape": "shorebird"
+},
+"nycticorax nycticorax": {
+"common": "Black-crowned Night-Heron",
+"lengthIn": 25,
+"shape": "wader"
+},
+"oreoscoptes montanus": {
+"common": "Sage Thrasher",
+"lengthIn": 8.5,
+"shape": "songbird"
+},
+"oxyura jamaicensis": {
+"common": "Ruddy Duck",
+"lengthIn": 15,
+"shape": "waterfowl"
+},
+"pandion haliaetus": {
+"common": "Osprey",
+"lengthIn": 23,
+"shape": "raptor"
+},
+"passer domesticus": {
+"common": "House Sparrow",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"passerculus sandwichensis": {
+"common": "Savannah Sparrow",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"passerella iliaca": {
+"common": "Fox Sparrow",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"passerina amoena": {
+"common": "Lazuli Bunting",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"passerina caerulea": {
+"common": "Blue Grosbeak",
+"lengthIn": 6.75,
+"shape": "songbird"
+},
+"passerina cyanea": {
+"common": "Indigo Bunting",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"patagioenas fasciata": {
+"common": "Band-tailed Pigeon",
+"lengthIn": 14.5,
+"shape": "dove"
+},
+"pelecanus erythrorhynchos": {
+"common": "American White Pelican",
+"lengthIn": 62,
+"shape": "wader"
+},
+"pelecanus occidentalis": {
+"common": "Brown Pelican",
+"lengthIn": 51,
+"shape": "wader"
+},
+"perisoreus canadensis": {
+"common": "Canada Jay",
+"lengthIn": 11.5,
+"shape": "corvid"
+},
+"petrochelidon pyrrhonota": {
+"common": "Cliff Swallow",
+"lengthIn": 5.5,
+"shape": "swallow"
+},
+"peucaea cassinii": {
+"common": "Cassin's Sparrow",
+"lengthIn": 6,
+"shape": "songbird"
+},
+"phainopepla nitens": {
+"common": "Phainopepla",
+"lengthIn": 7.75,
+"shape": "songbird"
+},
+"phalaenoptilus nuttallii": {
+"common": "Common Poorwill",
+"lengthIn": 7.75,
+"shape": "swallow"
+},
+"phalaropus tricolor": {
+"common": "Wilson's Phalarope",
+"lengthIn": 9.25,
+"shape": "shorebird"
+},
+"phasianus colchicus": {
+"common": "Ring-necked Pheasant",
+"lengthIn": 30,
+"shape": "gamebird"
+},
+"pheucticus ludovicianus": {
+"common": "Rose-breasted Grosbeak",
+"lengthIn": 8,
+"shape": "songbird"
+},
+"pheucticus melanocephalus": {
+"common": "Black-headed Grosbeak",
+"lengthIn": 8.25,
+"shape": "songbird"
+},
+"pica hudsonia": {
+"common": "Black-billed Magpie",
+"lengthIn": 19,
+"shape": "corvid"
+},
+"pica nuttalli": {
+"common": "Yellow-billed Magpie",
+"lengthIn": 16.5,
+"shape": "corvid"
+},
+"picoides arcticus": {
+"common": "Black-backed Woodpecker",
+"lengthIn": 9.5,
+"shape": "woodpecker"
+},
+"pinicola enucleator": {
+"common": "Pine Grosbeak",
+"lengthIn": 9,
+"shape": "songbird"
+},
+"pipilo chlorurus": {
+"common": "Green-tailed Towhee",
+"lengthIn": 7.25,
+"shape": "songbird"
+},
+"pipilo erythrophthalmus": {
+"common": "Eastern Towhee",
+"lengthIn": 8,
+"shape": "songbird"
+},
+"pipilo maculatus": {
+"common": "Spotted Towhee",
+"lengthIn": 8.5,
+"shape": "songbird"
+},
+"piranga ludoviciana": {
+"common": "Western Tanager",
+"lengthIn": 7.25,
+"shape": "songbird"
+},
+"piranga rubra": {
+"common": "Summer Tanager",
+"lengthIn": 7.75,
+"shape": "songbird"
+},
+"plegadis chihi": {
+"common": "White-faced Ibis",
+"lengthIn": 23,
+"shape": "wader"
+},
+"podiceps auritus": {
+"common": "Horned Grebe",
+"lengthIn": 14,
+"shape": "waterfowl"
+},
+"podiceps nigricollis": {
+"common": "Eared Grebe",
+"lengthIn": 12.5,
+"shape": "waterfowl"
+},
+"podilymbus podiceps": {
+"common": "Pied-billed Grebe",
+"lengthIn": 13,
+"shape": "waterfowl"
+},
+"poecile atricapillus": {
+"common": "Black-capped Chickadee",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"poecile gambeli": {
+"common": "Mountain Chickadee",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"poecile rufescens": {
+"common": "Chestnut-backed Chickadee",
+"lengthIn": 4.75,
+"shape": "songbird"
+},
+"polioptila caerulea": {
+"common": "Blue-gray Gnatcatcher",
+"lengthIn": 4.25,
+"shape": "songbird"
+},
+"pooecetes gramineus": {
+"common": "Vesper Sparrow",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"porzana carolina": {
+"common": "Sora",
+"lengthIn": 8.75,
+"shape": "shorebird"
+},
+"progne subis": {
+"common": "Purple Martin",
+"lengthIn": 8,
+"shape": "swallow"
+},
+"psaltriparus minimus": {
+"common": "Bushtit",
+"lengthIn": 4.5,
+"shape": "songbird"
+},
+"psiloscops flammeolus": {
+"common": "Flammulated Owl",
+"lengthIn": 6.75,
+"shape": "owl"
+},
+"pyrocephalus rubinus": {
+"common": "Vermilion Flycatcher",
+"lengthIn": 6,
+"shape": "songbird"
+},
+"quiscalus mexicanus": {
+"common": "Great-tailed Grackle",
+"lengthIn": 18,
+"shape": "songbird"
+},
+"quiscalus quiscula": {
+"common": "Common Grackle",
+"lengthIn": 12.5,
+"shape": "songbird"
+},
+"rallus limicola": {
+"common": "Virginia Rail",
+"lengthIn": 9.5,
+"shape": "shorebird"
+},
+"recurvirostra americana": {
+"common": "American Avocet",
+"lengthIn": 18,
+"shape": "shorebird"
+},
+"regulus satrapa": {
+"common": "Golden-crowned Kinglet",
+"lengthIn": 4,
+"shape": "songbird"
+},
+"riparia riparia": {
+"common": "Bank Swallow",
+"lengthIn": 5.25,
+"shape": "swallow"
+},
+"rynchops niger": {
+"common": "Black Skimmer",
+"lengthIn": 18,
+"shape": "gull"
+},
+"salpinctes obsoletus": {
+"common": "Rock Wren",
+"lengthIn": 6,
+"shape": "songbird"
+},
+"sayornis nigricans": {
+"common": "Black Phoebe",
+"lengthIn": 6.75,
+"shape": "songbird"
+},
+"sayornis saya": {
+"common": "Say's Phoebe",
+"lengthIn": 7.5,
+"shape": "songbird"
+},
+"seiurus aurocapilla": {
+"common": "Ovenbird",
+"lengthIn": 6,
+"shape": "songbird"
+},
+"selasphorus calliope": {
+"common": "Calliope Hummingbird",
+"lengthIn": 3.25,
+"shape": "hummingbird"
+},
+"selasphorus platycercus": {
+"common": "Broad-tailed Hummingbird",
+"lengthIn": 4,
+"shape": "hummingbird"
+},
+"selasphorus rufus": {
+"common": "Rufous Hummingbird",
+"lengthIn": 3.75,
+"shape": "hummingbird"
+},
+"selasphorus sasin": {
+"common": "Allen's Hummingbird",
+"lengthIn": 3.75,
+"shape": "hummingbird"
+},
+"setophaga citrina": {
+"common": "Hooded Warbler",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"setophaga coronata": {
+"common": "Yellow-rumped Warbler",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"setophaga magnolia": {
+"common": "Magnolia Warbler",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"setophaga nigrescens": {
+"common": "Black-throated Gray Warbler",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"setophaga occidentalis": {
+"common": "Hermit Warbler",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"setophaga palmarum": {
+"common": "Palm Warbler",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"setophaga petechia": {
+"common": "Yellow Warbler",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"setophaga ruticilla": {
+"common": "American Redstart",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"setophaga townsendi": {
+"common": "Townsend's Warbler",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"sialia currucoides": {
+"common": "Mountain Bluebird",
+"lengthIn": 7.25,
+"shape": "songbird"
+},
+"sialia mexicana": {
+"common": "Western Bluebird",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"sialia sialis": {
+"common": "Eastern Bluebird",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"sitta canadensis": {
+"common": "Red-breasted Nuthatch",
+"lengthIn": 4.5,
+"shape": "songbird"
+},
+"sitta carolinensis": {
+"common": "White-breasted Nuthatch",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"sitta pygmaea": {
+"common": "Pygmy Nuthatch",
+"lengthIn": 4.25,
+"shape": "songbird"
+},
+"spatula clypeata": {
+"common": "Northern Shoveler",
+"lengthIn": 19,
+"shape": "waterfowl"
+},
+"spatula cyanoptera": {
+"common": "Cinnamon Teal",
+"lengthIn": 16,
+"shape": "waterfowl"
+},
+"spatula discors": {
+"common": "Blue-winged Teal",
+"lengthIn": 15.5,
+"shape": "waterfowl"
+},
+"sphyrapicus nuchalis": {
+"common": "Red-naped Sapsucker",
+"lengthIn": 8.5,
+"shape": "woodpecker"
+},
+"sphyrapicus ruber": {
+"common": "Red-breasted Sapsucker",
+"lengthIn": 8.5,
+"shape": "woodpecker"
+},
+"sphyrapicus thyroideus": {
+"common": "Williamson's Sapsucker",
+"lengthIn": 9.5,
+"shape": "woodpecker"
+},
+"spinus lawrencei": {
+"common": "Lawrence's Goldfinch",
+"lengthIn": 4.75,
+"shape": "songbird"
+},
+"spinus pinus": {
+"common": "Pine Siskin",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"spinus psaltria": {
+"common": "Lesser Goldfinch",
+"lengthIn": 4.5,
+"shape": "songbird"
+},
+"spinus tristis": {
+"common": "American Goldfinch",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"spiza americana": {
+"common": "Dickcissel",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"spizella atrogularis": {
+"common": "Black-chinned Sparrow",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"spizella breweri": {
+"common": "Brewer's Sparrow",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"spizella pallida": {
+"common": "Clay-colored Sparrow",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"spizella passerina": {
+"common": "Chipping Sparrow",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"spizella pusilla": {
+"common": "Field Sparrow",
+"lengthIn": 5.75,
+"shape": "songbird"
+},
+"spizelloides arborea": {
+"common": "American Tree Sparrow",
+"lengthIn": 6.25,
+"shape": "songbird"
+},
+"stelgidopteryx serripennis": {
+"common": "Northern Rough-winged Swallow",
+"lengthIn": 5.5,
+"shape": "swallow"
+},
+"sterna forsteri": {
+"common": "Forster's Tern",
+"lengthIn": 14.5,
+"shape": "gull"
+},
+"sterna hirundo": {
+"common": "Common Tern",
+"lengthIn": 12.5,
+"shape": "gull"
+},
+"sterna paradisaea": {
+"common": "Arctic Tern",
+"lengthIn": 15,
+"shape": "gull"
+},
+"streptopelia decaocto": {
+"common": "Eurasian Collared-Dove",
+"lengthIn": 13,
+"shape": "dove"
+},
+"strix nebulosa": {
+"common": "Great Gray Owl",
+"lengthIn": 27,
+"shape": "owl"
+},
+"strix occidentalis": {
+"common": "Spotted Owl",
+"lengthIn": 17,
+"shape": "owl"
+},
+"sturnella neglecta": {
+"common": "Western Meadowlark",
+"lengthIn": 9.5,
+"shape": "songbird"
+},
+"sturnus vulgaris": {
+"common": "European Starling",
+"lengthIn": 8.5,
+"shape": "songbird"
+},
+"tachycineta bicolor": {
+"common": "Tree Swallow",
+"lengthIn": 5.75,
+"shape": "swallow"
+},
+"tachycineta thalassina": {
+"common": "Violet-green Swallow",
+"lengthIn": 5.25,
+"shape": "swallow"
+},
+"thalasseus elegans": {
+"common": "Elegant Tern",
+"lengthIn": 17,
+"shape": "gull"
+},
+"thryomanes bewickii": {
+"common": "Bewick's Wren",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"toxostoma curvirostre": {
+"common": "Curve-billed Thrasher",
+"lengthIn": 11,
+"shape": "songbird"
+},
+"toxostoma redivivum": {
+"common": "California Thrasher",
+"lengthIn": 12,
+"shape": "songbird"
+},
+"tringa flavipes": {
+"common": "Lesser Yellowlegs",
+"lengthIn": 10.5,
+"shape": "shorebird"
+},
+"tringa melanoleuca": {
+"common": "Greater Yellowlegs",
+"lengthIn": 14,
+"shape": "shorebird"
+},
+"tringa semipalmata": {
+"common": "Willet",
+"lengthIn": 15,
+"shape": "shorebird"
+},
+"troglodytes aedon": {
+"common": "House Wren",
+"lengthIn": 4.75,
+"shape": "songbird"
+},
+"troglodytes pacificus": {
+"common": "Pacific Wren",
+"lengthIn": 4,
+"shape": "songbird"
+},
+"turdus migratorius": {
+"common": "American Robin",
+"lengthIn": 10,
+"shape": "songbird"
+},
+"tympanuchus phasianellus": {
+"common": "Sharp-tailed Grouse",
+"lengthIn": 17,
+"shape": "gamebird"
+},
+"tyrannus tyrannus": {
+"common": "Eastern Kingbird",
+"lengthIn": 8.5,
+"shape": "songbird"
+},
+"tyrannus verticalis": {
+"common": "Western Kingbird",
+"lengthIn": 8.75,
+"shape": "songbird"
+},
+"tyrannus vociferans": {
+"common": "Cassin's Kingbird",
+"lengthIn": 9,
+"shape": "songbird"
+},
+"tyto alba": {
+"common": "Barn Owl",
+"lengthIn": 16,
+"shape": "owl"
+},
+"tyto furcata": {
+"common": "American Barn Owl",
+"lengthIn": 16,
+"shape": "owl"
+},
+"urile penicillatus": {
+"common": "Brandt's Cormorant",
+"lengthIn": 34,
+"shape": "wader"
+},
+"vireo bellii": {
+"common": "Bell's Vireo",
+"lengthIn": 4.75,
+"shape": "songbird"
+},
+"vireo cassinii": {
+"common": "Cassin's Vireo",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"vireo flavifrons": {
+"common": "Yellow-throated Vireo",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"vireo gilvus": {
+"common": "Warbling Vireo",
+"lengthIn": 5.5,
+"shape": "songbird"
+},
+"vireo huttoni": {
+"common": "Hutton's Vireo",
+"lengthIn": 5,
+"shape": "songbird"
+},
+"vireo plumbeus": {
+"common": "Plumbeous Vireo",
+"lengthIn": 5.25,
+"shape": "songbird"
+},
+"xanthocephalus xanthocephalus": {
+"common": "Yellow-headed Blackbird",
+"lengthIn": 9.5,
+"shape": "songbird"
+},
+"zenaida asiatica": {
+"common": "White-winged Dove",
+"lengthIn": 11.5,
+"shape": "dove"
+},
+"zenaida macroura": {
+"common": "Mourning Dove",
+"lengthIn": 12,
+"shape": "dove"
+},
+"zonotrichia albicollis": {
+"common": "White-throated Sparrow",
+"lengthIn": 6.75,
+"shape": "songbird"
+},
+"zonotrichia atricapilla": {
+"common": "Golden-crowned Sparrow",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"zonotrichia leucophrys": {
+"common": "White-crowned Sparrow",
+"lengthIn": 7,
+"shape": "songbird"
+},
+"zonotrichia querula": {
+"common": "Harris's Sparrow",
+"lengthIn": 7.5,
+"shape": "songbird"
+}
+}

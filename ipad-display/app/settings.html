@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lists &amp; settings</title>
+<script>try{if(localStorage.getItem("nn-theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}</script>
+<style>
+  :root {
+    --paper: #f3ead2; --paper-edge: #e7d9b6; --ink: #2b271f; --ink-soft: #7c7161;
+    --seal: #a2402f; --you: #3f6f52; --mel: #6a4a7a;
+  }
+  html.dark {
+    --paper: #000000; --paper-edge: #262626; --ink: #cbc5b6; --ink-soft: #98917f;
+    --seal: #e79a86; --you: #7fb894; --mel: #c0a6dd;
+  }
+  html.dark body { background: #000000; }
+  html.dark .card, html.dark input[type=text], html.dark .results, html.dark button.mini { background: #111111; }
+  html.dark img[src*="/vendor/silhouettes/"] { filter: invert(0.82) brightness(1.05); }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0; padding: 24px; max-width: 960px;
+    background: radial-gradient(120% 120% at 50% 0%, #f6efdb 0%, var(--paper) 60%, var(--paper-edge) 100%);
+    min-height: 100vh; color: var(--ink);
+    font-family: "Hoefler Text", "Songti SC", "Yu Mincho", Georgia, "Times New Roman", serif;
+  }
+  a.back { color: var(--ink-soft); text-decoration: none; font-size: 14px; }
+  h1 { font-size: 25px; margin: 12px 0 18px; font-weight: 600; }
+  h2 { font-size: 17px; margin: 0 0 4px; font-weight: 600; }
+  .card { background: #fbf6e8; border: 1px solid var(--paper-edge); border-radius: 12px; padding: 18px 20px; margin-bottom: 22px; }
+  .setrow { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 0; border-bottom: 1px solid var(--paper-edge); flex-wrap: wrap; }
+  .setrow:last-child { border-bottom: none; }
+  .setrow .lab { font-size: 15px; }
+  .setrow .lab .sub { color: var(--ink-soft); font-size: 12px; margin-top: 2px; }
+  .pills { display: inline-flex; border: 1px solid var(--paper-edge); border-radius: 999px; overflow: hidden; background: var(--paper); }
+  .pills button { font-family: inherit; font-size: 13.5px; padding: 7px 15px; border: none; background: transparent; color: var(--ink-soft); cursor: pointer; }
+  .pills button.active { background: var(--ink); color: var(--paper); }
+  .distwrap { display: flex; align-items: center; gap: 12px; }
+  .distwrap input[type=range] { width: 190px; accent-color: var(--ink); }
+  .distval { font-size: 15px; min-width: 52px; text-align: right; }
+
+  .search { position: relative; margin-bottom: 16px; }
+  input[type=text] { width: 100%; padding: 12px 14px; font-size: 16px; border-radius: 10px; font-family: inherit; border: 1px solid var(--paper-edge); background: #fbf6e8; color: var(--ink); }
+  .results { list-style: none; margin: 6px 0 0; padding: 0; border: 1px solid var(--paper-edge); border-radius: 10px; overflow: hidden; background: #fbf6e8; }
+  .results li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--paper-edge); }
+  .results li:last-child { border-bottom: none; }
+  .results .nm { font-size: 15px; } .results .sc { color: var(--ink-soft); font-style: italic; font-size: 12px; }
+  .addbtns { display: flex; gap: 6px; flex-shrink: 0; }
+  button.mini { font-family: inherit; font-size: 13px; padding: 6px 12px; border-radius: 8px; cursor: pointer; border: 1px solid var(--paper-edge); background: #fbf6e8; color: var(--ink); }
+  button.mini:active { filter: brightness(0.96); }
+  .cols { display: flex; gap: 24px; flex-wrap: wrap; }
+  .col { flex: 1 1 360px; }
+  .col .sub { color: var(--ink-soft); font-size: 12px; margin: 0 0 10px; line-height: 1.45; }
+  .uploadrow { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+  .warn { color: var(--seal); font-size: 12.5px; margin: 0 0 10px; }
+  .listbox { border: 1px solid var(--paper-edge); border-radius: 10px; max-height: 360px; overflow-y: auto; background: var(--paper); }
+  .listbox .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--paper-edge); }
+  .listbox .row:last-child { border-bottom: none; }
+  .listbox .nm { font-size: 14px; } .listbox .sc { color: var(--ink-soft); font-style: italic; font-size: 11px; }
+  .rm { border: none; background: none; color: var(--seal); font-size: 18px; line-height: 1; padding: 2px 6px; cursor: pointer; }
+  .count { color: var(--ink-soft); font-weight: 400; }
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 85vw; }
+  #toast.show { opacity: 1; }
+  input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<a class="back" href="index.html">&larr; Collage</a> &nbsp;·&nbsp; <a class="back" href="atlas.html">Atlas</a>
+<h1>Lists &amp; settings</h1>
+
+<div class="card" id="settings">
+  <div class="setrow">
+    <div class="lab">Distance<div class="sub">Radius from your center point. eBird caps this at 31 mi.</div></div>
+    <div class="distwrap">
+      <input type="range" id="dist" min="1" max="31" step="1">
+      <span class="distval" id="distval">— mi</span>
+    </div>
+  </div>
+  <div class="setrow">
+    <div class="lab">Days out<div class="sub">How recent a sighting must be to show.</div></div>
+    <div class="pills" id="daysPills">
+      <button data-days="1">1 day</button>
+      <button data-days="3">3 days</button>
+      <button data-days="7">7 days</button>
+      <button data-days="30">30 days</button>
+    </div>
+  </div>
+  <div class="setrow">
+    <div class="lab">Whose needs<div class="sub">Which person&#39;s needs the collage shows.</div></div>
+    <div class="pills" id="whosePills"></div>
+  </div>
+  <div class="setrow">
+    <div class="lab">Appearance<div class="sub">Dark uses a true-black background to save power on the display.</div></div>
+    <div class="pills" id="themePills">
+      <button data-theme="light">Light</button>
+      <button data-theme="dark">Dark</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="search">
+    <input id="q" type="text" placeholder="Mark a bird seen — search by name…" autocomplete="off">
+    <ul id="results" class="results" style="display:none;"></ul>
+  </div>
+  <div class="cols" id="cols"></div>
+</div>
+
+<div class="card">
+  <h2>Bird images</h2>
+  <div class="sub" style="margin-bottom:12px;">
+    Upload your own art for a species — it replaces the silhouette (or the bundled
+    illustration) on the board. <b>Perched</b> shows on the collage; <b>in-flight</b>
+    shows on the species detail page. Transparent PNG works best — it's auto-cropped
+    to the bird so every upload sits at a consistent size. Up to 12&nbsp;MB.
+  </div>
+  <div class="search" id="imgSearchWrap">
+    <input id="imgq" type="text" placeholder="Find any species to add art for…" autocomplete="off">
+    <ul id="imgResults" class="results" style="display:none;"></ul>
+  </div>
+  <div id="imgTargets"></div>
+  <div class="sub" id="gapsHead" style="margin:16px 0 8px;">Recorded here, still without art</div>
+  <div id="imgGaps"></div>
+</div>
+
+<div id="toast"></div>
+
+<style>
+  .target { display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-bottom: 1px solid var(--paper-edge); flex-wrap: wrap; }
+  .target:last-child { border-bottom: none; }
+  .target .who { min-width: 190px; }
+  .target .who .nm { font-size: 14.5px; font-weight: 600; }
+  .target .who .sc { font-size: 11px; font-style: italic; color: var(--ink-soft); }
+  .target .who .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: 4px; }
+  .slots { display: flex; gap: 14px; }
+  .slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .slot .thumb { width: 58px; height: 58px; border: 1px solid var(--paper-edge); border-radius: 8px; background: var(--paper); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .slot .thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .slot .lbl { font-size: 11px; color: var(--ink-soft); }
+  .slot .act { display: flex; gap: 4px; }
+  .slot .act button { font-size: 11px; padding: 3px 8px; }
+  .slot.has .lbl { color: var(--you); }
+</style>
+
+<script src="app.js"></script>
+<script>
+let PEOPLE = [];   // person ids, from /api/config
+let LABEL = {};    // id -> display name
+let toastTimer = null;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+}
+async function postSettings(patch) {
+  return getJSON("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
+}
+async function postLife(payload) {
+  return getJSON("/api/lifelist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+}
+
+// ---- settings ----
+const distEl = document.getElementById("dist");
+const distValEl = document.getElementById("distval");
+let distTimer = null;
+function markPills(container, attr, val) {
+  container.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset[attr] == val));
+}
+// Build the per-person UI (whose-needs pills + a life-list column each) from
+// the people configured in config.json — nothing person-specific lives here.
+function buildPeopleUI(cfg) {
+  const people = peopleOf(cfg);
+  PEOPLE = people.map((p) => p.id);
+  LABEL = Object.fromEntries(people.map((p) => [p.id, p.label]));
+
+  const pills = document.getElementById("whosePills");
+  pills.innerHTML = "";
+  for (const p of people) {
+    const b = document.createElement("button");
+    b.dataset.whose = p.id; b.textContent = p.label;
+    pills.appendChild(b);
+  }
+  if (people.length !== 1) {
+    const b = document.createElement("button");
+    b.dataset.whose = "both"; b.textContent = people.length > 2 ? "Everyone" : "Both";
+    pills.appendChild(b);
+  }
+
+  const cols = document.getElementById("cols");
+  cols.innerHTML = "";
+  for (const p of people) {
+    const col = document.createElement("div");
+    col.className = "col";
+    col.innerHTML =
+      `<h2>${escapeHTML(p.label)} <span class="count" id="${p.id}-count"></span></h2>
+      <div class="sub">${escapeHTML(p.label)}&#39;s life list. Anything not on it is a need.</div>
+      <div class="uploadrow">
+        <button class="mini" id="${p.id}-upload">Upload eBird life list CSV</button>
+        <input type="file" id="${p.id}-file" accept=".csv,text/csv">
+      </div>
+      <div class="warn" id="${p.id}-warn" style="display:none;">Empty — upload ${escapeHTML(p.label)}&#39;s eBird life list CSV. Until then the collage shows no needs for ${escapeHTML(p.label)}.</div>
+      <div id="${p.id}-list" class="listbox"></div>`;
+    cols.appendChild(col);
+    wireUpload(p.id);
+  }
+}
+
+async function loadSettings() {
+  const cfg = await fetchConfig();
+  buildPeopleUI(cfg);
+  if (cfg.place_label) {
+    document.querySelector("#settings .setrow .lab .sub").textContent =
+      `Radius from ${cfg.place_label}. eBird caps this at ${cfg.max_dist_miles || 31} mi.`;
+  }
+  distEl.value = cfg.dist_miles;
+  distEl.max = cfg.max_dist_miles || 31;
+  distValEl.textContent = `${cfg.dist_miles} mi`;
+  markPills(document.getElementById("daysPills"), "days", cfg.days);
+  markPills(document.getElementById("whosePills"), "whose", cfg.whose);
+  markPills(document.getElementById("themePills"), "theme", cfg.theme);
+  applyTheme(cfg.theme);
+}
+distEl.addEventListener("input", () => {
+  distValEl.textContent = `${distEl.value} mi`;
+  clearTimeout(distTimer);
+  distTimer = setTimeout(async () => {
+    await postSettings({ dist_miles: parseInt(distEl.value, 10) });
+    toast(`Distance set to ${distEl.value} mi`);
+  }, 350);
+});
+document.getElementById("daysPills").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  markPills(e.currentTarget, "days", b.dataset.days);
+  await postSettings({ days: parseInt(b.dataset.days, 10) });
+  toast(`Showing the last ${b.dataset.days} days`);
+});
+document.getElementById("whosePills").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  markPills(e.currentTarget, "whose", b.dataset.whose);
+  await postSettings({ whose: b.dataset.whose });
+  toast(`Showing ${b.dataset.whose === "both" ? "both lists" : LABEL[b.dataset.whose] + "'s needs"}`);
+});
+document.getElementById("themePills").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  markPills(e.currentTarget, "theme", b.dataset.theme);
+  applyTheme(b.dataset.theme);
+  await postSettings({ theme: b.dataset.theme });
+  toast(`${b.dataset.theme === "dark" ? "Dark" : "Light"} mode`);
+});
+
+// ---- CSV upload ----
+function wireUpload(person) {
+  const btn = document.getElementById(`${person}-upload`);
+  const file = document.getElementById(`${person}-file`);
+  btn.onclick = () => file.click();
+  file.onchange = async () => {
+    const f = file.files[0]; if (!f) return;
+    btn.disabled = true; btn.textContent = "Uploading…";
+    try {
+      const r = await postLife({ person, action: "upload", csv: await f.text() });
+      toast(`${LABEL[person]}'s life list replaced — ${r.count} species`);
+      await loadLists();
+    } catch (e) { toast(e.message); }
+    finally { btn.disabled = false; btn.textContent = "Upload eBird life list CSV"; file.value = ""; }
+  };
+}
+
+// ---- search (mark seen) ----
+let searchTimer = null;
+const qEl = document.getElementById("q");
+const resultsEl = document.getElementById("results");
+qEl.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  const term = qEl.value.trim();
+  if (term.length < 2) { resultsEl.style.display = "none"; return; }
+  searchTimer = setTimeout(() => runSearch(term), 220);
+});
+async function runSearch(term) {
+  let hits = [];
+  try { hits = await getJSON(`/api/species-search?q=${encodeURIComponent(term)}`); }
+  catch (e) { toast(e.message); return; }
+  resultsEl.innerHTML = "";
+  if (!hits.length) { resultsEl.style.display = "none"; return; }
+  for (const h of hits) {
+    const li = document.createElement("li");
+    const left = document.createElement("div");
+    left.innerHTML = `<div class="nm">${escapeHTML(h.comName)}</div><div class="sc">${escapeHTML(h.sciName)}</div>`;
+    const btns = document.createElement("div");
+    btns.className = "addbtns";
+    PEOPLE.forEach((person, i) => {
+      const b = document.createElement("button");
+      b.className = "mini"; b.style.borderColor = personColor(i);
+      b.textContent = `✓ ${LABEL[person]} saw`;
+      b.onclick = async () => { await postLife({ person, action: "add", sci: h.sciName, common: h.comName }); toast(`${h.comName} seen — ${LABEL[person]}`); await loadLists(); };
+      btns.appendChild(b);
+    });
+    li.append(left, btns);
+    resultsEl.appendChild(li);
+  }
+  resultsEl.style.display = "block";
+}
+document.addEventListener("click", (e) => {
+  if (!document.querySelector(".search").contains(e.target)) resultsEl.style.display = "none";
+});
+
+// ---- life lists ----
+async function loadLists() {
+  for (const person of PEOPLE) {
+    let items = [];
+    try { items = await getJSON(`/data/life_${person}.json`); } catch {}
+    document.getElementById(`${person}-count`).textContent = `(${items.length} species)`;
+    document.getElementById(`${person}-warn`).style.display = items.length ? "none" : "block";
+    const box = document.getElementById(`${person}-list`);
+    box.innerHTML = "";
+    for (const e of items) {
+      const row = document.createElement("div"); row.className = "row";
+      const left = document.createElement("div");
+      left.innerHTML = `<div class="nm">${escapeHTML(e.common || e.sci)}</div><div class="sc">${escapeHTML(e.sci)}</div>`;
+      const rm = document.createElement("button"); rm.className = "rm"; rm.textContent = "×"; rm.title = "Remove (becomes a need again)";
+      rm.onclick = async () => { await postLife({ person, action: "remove", sci: e.sci }); toast(`${e.common || e.sci} removed — a need again`); await loadLists(); };
+      row.append(left, rm); box.appendChild(row);
+    }
+  }
+}
+
+// ---- bird image uploads ----
+const POSES = ["perched", "flight"];
+const POSE_LABEL = { perched: "Perched", flight: "In flight" };
+
+function fileToDataUrl(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// Crop a transparent-background image to the SOLID bird before upload, so it
+// fills its tile like the bundled art. Faint glow/halo pixels (a common
+// ChatGPT "transparent background" artifact) are dropped first — otherwise the
+// glow reaches the edges, the crop does nothing, and the bird floats padded
+// inside a too-tall box and renders small. Opaque images (JPEG) are left as-is.
+const GLOW_ALPHA = 40; // alpha at/below this is treated as glow, not bird
+async function autoTrim(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url;
+    });
+    const w = img.naturalWidth, h = img.naturalHeight;
+    if (!w || !h) return fileToDataUrl(file);
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0);
+    let imgData;
+    try { imgData = ctx.getImageData(0, 0, w, h); } catch { return fileToDataUrl(file); }
+    const data = imgData.data;
+    let minX = w, minY = h, maxX = -1, maxY = -1, transparentSeen = false;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const idx = (y * w + x) * 4 + 3, a = data[idx];
+      if (a < 250) transparentSeen = true;
+      if (a < GLOW_ALPHA) { data[idx] = 0; continue; } // erase faint glow
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+    }
+    if (!transparentSeen || maxX < 0) return fileToDataUrl(file);          // opaque
+    ctx.putImageData(imgData, 0, 0);                                       // apply glow removal
+    if (minX <= 2 && minY <= 2 && maxX >= w - 3 && maxY >= h - 3) return c.toDataURL("image/png"); // already tight (but glow-cleaned)
+    const bw = maxX - minX + 1, bh = maxY - minY + 1;
+    const oc = document.createElement("canvas"); oc.width = bw; oc.height = bh;
+    oc.getContext("2d").drawImage(c, minX, minY, bw, bh, 0, 0, bw, bh);
+    return oc.toDataURL("image/png");
+  } catch {
+    return fileToDataUrl(file);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function makeTarget(sp, container, prepend, initialArt) {
+  const code = sp.speciesCode || "";
+  const row = document.createElement("div");
+  row.className = "target";
+  const who = document.createElement("div");
+  who.className = "who";
+  who.innerHTML = `<div class="nm">${escapeHTML(sp.comName)}</div><div class="sc">${escapeHTML(sp.sciName)}</div>`;
+  PEOPLE.forEach((person, i) => {
+    if (!needsFor(sp, person)) return;
+    const d = document.createElement("span"); d.className = "dot";
+    d.style.background = personColor(i);
+    who.querySelector(".nm").appendChild(d);
+  });
+
+  const slots = document.createElement("div");
+  slots.className = "slots";
+  row.append(who, slots);
+  if (prepend) container.prepend(row); else container.appendChild(row);
+
+  // The atlas response already carries this species' art, so the gaps list
+  // renders without one /api/species-art round-trip per row; after an upload
+  // or delete we re-fetch just that row.
+  let seededArt = initialArt || null;
+  async function refresh() {
+    let art = seededArt;
+    seededArt = null;
+    if (!art) {
+      art = { img: "", imgFlight: "" };
+      try { art = await getJSON(`/api/species-art?code=${encodeURIComponent(code)}&sci=${encodeURIComponent(sp.sciName)}`); } catch {}
+    }
+    slots.innerHTML = "";
+    for (const pose of POSES) {
+      const url = pose === "perched" ? art.img : art.imgFlight;
+      const isUpload = url && url.includes(`/images/${code}_${pose}`);
+      const slot = document.createElement("div");
+      slot.className = "slot" + (isUpload ? " has" : "");
+
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+      if (url && (isUpload || url.includes("/images/"))) {
+        const im = document.createElement("img"); im.src = url; thumb.appendChild(im);
+      } else if (url) {
+        const im = document.createElement("img"); im.src = url; im.style.opacity = ".5"; thumb.appendChild(im);
+      }
+
+      const lbl = document.createElement("div"); lbl.className = "lbl";
+      lbl.textContent = POSE_LABEL[pose] + (isUpload ? " ✓" : "");
+
+      const act = document.createElement("div"); act.className = "act";
+      const up = document.createElement("button"); up.className = "mini"; up.textContent = isUpload ? "Replace" : "Upload";
+      const file = document.createElement("input"); file.type = "file"; file.accept = "image/png,image/jpeg,image/webp"; file.style.display = "none";
+      up.onclick = () => file.click();
+      file.onchange = async () => {
+        const f = file.files[0]; if (!f) return;
+        up.disabled = true; up.textContent = "…";
+        try {
+          const dataUrl = await autoTrim(f);
+          await getJSON("/api/upload-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, sci: sp.sciName, pose, dataUrl }) });
+          toast(`${sp.comName} — ${POSE_LABEL[pose].toLowerCase()} image saved`);
+          await refresh();
+        } catch (e) { toast(e.message); up.disabled = false; }
+      };
+      act.append(up, file);
+      if (isUpload) {
+        const rm = document.createElement("button"); rm.className = "mini"; rm.textContent = "×"; rm.title = "Remove";
+        rm.onclick = async () => {
+          try { await getJSON("/api/delete-image", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, pose }) });
+            toast(`${sp.comName} — ${POSE_LABEL[pose].toLowerCase()} image removed`); await refresh();
+          } catch (e) { toast(e.message); }
+        };
+        act.appendChild(rm);
+      }
+      slot.append(thumb, lbl, act);
+      slots.appendChild(slot);
+    }
+  }
+  await refresh();
+}
+
+// search to add art for any species
+let imgSearchTimer = null;
+const imgqEl = document.getElementById("imgq");
+const imgResultsEl = document.getElementById("imgResults");
+imgqEl.addEventListener("input", () => {
+  clearTimeout(imgSearchTimer);
+  const term = imgqEl.value.trim();
+  if (term.length < 2) { imgResultsEl.style.display = "none"; return; }
+  imgSearchTimer = setTimeout(async () => {
+    let hits = [];
+    try { hits = await getJSON(`/api/species-search?q=${encodeURIComponent(term)}`); } catch (e) { toast(e.message); return; }
+    imgResultsEl.innerHTML = "";
+    if (!hits.length) { imgResultsEl.style.display = "none"; return; }
+    for (const h of hits) {
+      const li = document.createElement("li");
+      li.innerHTML = `<div><div class="nm">${escapeHTML(h.comName)}</div><div class="sc">${escapeHTML(h.sciName)}</div></div>`;
+      const b = document.createElement("button"); b.className = "mini"; b.textContent = "Add art";
+      b.onclick = async () => { imgResultsEl.style.display = "none"; imgqEl.value = ""; await makeTarget(h, document.getElementById("imgTargets"), true); };
+      li.appendChild(b);
+      imgResultsEl.appendChild(li);
+    }
+    imgResultsEl.style.display = "block";
+  }, 220);
+});
+document.addEventListener("click", (e) => {
+  if (!document.getElementById("imgSearchWrap").contains(e.target)) imgResultsEl.style.display = "none";
+});
+
+async function loadGaps() {
+  const gaps = document.getElementById("imgGaps");
+  gaps.innerHTML = "";
+  let rows = [];
+  try { rows = await getJSON("/api/atlas"); } catch { return; }
+  rows = rows.filter((r) => r.img && r.img.includes("/vendor/silhouettes/"));
+  rows.sort((a, b) => needsAny(b) - needsAny(a) || a.comName.localeCompare(b.comName));
+  document.getElementById("gapsHead").textContent =
+    rows.length ? `Recorded here, still without art (${rows.length})` : "Every species recorded here has art.";
+  for (const r of rows) makeTarget(r, gaps, false, { img: r.img, imgFlight: r.imgFlight });
+}
+
+(async () => {
+  // The person columns/pills come from config, so settings must load first.
+  try { await loadSettings(); } catch (e) { toast(e.message); }
+  loadLists().catch((e) => toast(e.message));
+  loadGaps().catch((e) => toast(e.message));
+})();
+</script>
+</body>
+</html>

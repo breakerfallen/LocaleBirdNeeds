@@ -1,0 +1,25 @@
+{
+  "_readme": "Copy this file to config.json and fill it in. config.json is gitignored, so your API keys and household details never leave this machine.",
+
+  "_ebird": "Free key, instant: https://ebird.org/api/keygen (or set the EBIRD_API_KEY environment variable instead).",
+  "ebird_api_key": "",
+
+  "_where": "Center point and default radius of the board. dist_km is capped by eBird at 50 km; back_days 30 is eBird's max window.",
+  "lat": 39.3906,
+  "lng": -104.7486,
+  "dist_km": 48,
+  "back_days": 30,
+  "place_label": "Hwy 86 & 83, Franktown/Castle Rock, CO",
+  "port": 8080,
+
+  "_who": "The household: id -> display name. Ids are lowercase slugs (they become data/life_<id>.json and settings values). Any number of people works; the UI builds itself from this list.",
+  "people": { "kathryn": "Kathryn", "melissa": "Melissa" },
+
+  "_credits": "Name credited (CC BY-NC-SA 4.0) on images you upload via the settings page.",
+  "owner_name": "Your Name",
+
+  "_images": "Only used by the OPTIONAL build_images.py pre-build step; the running app never calls an image service. Leave blank to use silhouettes or the free pollinations provider.",
+  "image_provider": "",
+  "openai_api_key": "",
+  "gemini_api_key": ""
+}

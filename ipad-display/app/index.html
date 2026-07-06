@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Needs Nearby</title>
+<script>try{if(localStorage.getItem("nn-theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}</script>
+<style>
+  :root {
+    --paper: #f3ead2;
+    --paper-edge: #e7d9b6;
+    --ink: #2b271f;
+    --ink-soft: #7c7161;
+    --seal: #a2402f;
+  }
+  html.dark {
+    --paper: #000000; --paper-edge: #262626;
+    --ink: #cbc5b6; --ink-soft: #98917f; --seal: #e79a86;
+  }
+  html.dark body { background: #000000; }
+  html.dark img[src*="/vendor/silhouettes/"] { filter: invert(0.82) brightness(1.05); }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  html { background: var(--paper); }
+  body {
+    margin: 0; overflow: hidden;
+    background:
+      radial-gradient(120% 120% at 50% 0%, #f6efdb 0%, var(--paper) 55%, var(--paper-edge) 100%);
+    color: var(--ink);
+    font-family: "Hoefler Text", "Songti SC", "Yu Mincho", Georgia, "Times New Roman", serif;
+    -webkit-user-select: none; user-select: none;
+  }
+  .cog {
+    position: fixed; top: 12px; right: 14px; z-index: 5;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%;
+    color: var(--ink-soft); text-decoration: none; opacity: 0.55;
+  }
+  .cog:active { background: var(--paper-edge); }
+  .cog svg { width: 19px; height: 19px; display: block; }
+
+  #stage { position: absolute; inset: 0; }
+  #collage { position: absolute; top: 0; left: 0; transform-origin: top left; }
+  /* Tiles don't take clicks themselves — a global handler hit-tests the actual
+     silhouette so a small bird inside a flying bird's transparent box is still
+     clickable. */
+  .tile { position: absolute; text-decoration: none; color: inherit; text-align: center; pointer-events: none; }
+  .tile .art { display: flex; align-items: flex-end; justify-content: center; width: 100%; }
+  .tile img {
+    display: block; width: 100%; height: 100%; object-fit: contain;
+    filter: drop-shadow(0 3px 4px rgba(60,45,20,0.18));
+    transition: transform 0.15s ease, filter 0.15s ease;
+  }
+  /* Hover highlight, AvianVisitors-style: names stay hidden until a bird is
+     under the cursor — then it lifts slightly and the pill below identifies it. */
+  .tile.is-hover { z-index: 3; }
+  .tile.is-hover img {
+    transform: scale(1.06);
+    filter: drop-shadow(0 5px 14px rgba(26,22,18,0.32)) saturate(1.12);
+  }
+  html.dark .tile.is-hover img {
+    filter: drop-shadow(0 0 12px rgba(203,197,182,0.25)) saturate(1.12);
+  }
+  html.dark .tile.is-hover img[src*="/vendor/silhouettes/"] {
+    filter: invert(0.82) brightness(1.2) drop-shadow(0 0 12px rgba(203,197,182,0.3));
+  }
+  #tip {
+    position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%);
+    z-index: 6; max-width: 88vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 8px 18px; border-radius: 999px;
+    background: var(--paper); border: 1px solid var(--paper-edge);
+    box-shadow: 0 6px 18px rgba(26,22,18,0.15);
+    font-size: 14px; color: var(--ink);
+    opacity: 0; transition: opacity 0.15s ease; pointer-events: none;
+  }
+  html.dark #tip { background: #111111; box-shadow: 0 6px 18px rgba(0,0,0,0.6); }
+  #tip.show { opacity: 1; }
+  #tip .nm { font-weight: 600; }
+  #tip .soft { color: var(--ink-soft); }
+
+  footer {
+    position: fixed; bottom: 8px; left: 0; right: 0; z-index: 5;
+    display: flex; justify-content: center; align-items: baseline; gap: 14px;
+    color: var(--ink-soft); font-size: 11.5px;
+  }
+  footer a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--paper-edge); }
+  #empty, #error { position: absolute; top: 45%; left: 0; right: 0; text-align: center; padding: 0 30px; }
+  #empty { color: var(--ink-soft); font-size: 18px; }
+  #error { color: var(--seal); font-size: 15px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<a class="cog" href="settings.html" title="Lists &amp; settings" aria-label="Lists and settings">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3.2"></circle>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+  </svg>
+</a>
+
+<div id="stage">
+  <div id="collage"></div>
+</div>
+<div id="empty" style="display:none;">Nothing needed has been reported nearby in this window.</div>
+<div id="error" style="display:none;"></div>
+<div id="tip" aria-hidden="true"></div>
+<footer>
+  <span id="status">Loading…</span>
+  <a href="atlas.html">Atlas</a>
+</footer>
+
+<script src="app.js"></script>
+<script>
+const BASE = 230;   // art side (px) of the largest bird
+const MIN = 78;     // smallest legible art side
+let ALL = [];       // full fetched+enriched list (30-day superset)
+let fetchedAt = 0;  // when the server last pulled from eBird
+let placed = [];    // rendered tiles for silhouette hit-testing
+let flockNaturalW = 1; // unscaled collage width, for mapping cursor -> local
+let hovered = null; // currently-highlighted tile record
+let cfg = null;
+
+function daysAgo(obsDt) {
+  if (!obsDt) return 999;
+  const d = new Date(obsDt.replace(" ", "T"));
+  if (isNaN(d)) return 999;
+  return (Date.now() - d.getTime()) / 86400000;
+}
+
+// ---- hover pill ----------------------------------------------------------
+function milesFrom(lat, lng) {
+  if (!cfg || typeof lat !== "number" || typeof lng !== "number") return null;
+  const R = 3958.8, toRad = (x) => (x * Math.PI) / 180;
+  const dLat = toRad(lat - cfg.lat), dLng = toRad(lng - cfg.lng);
+  const h = Math.sin(dLat / 2) ** 2 +
+            Math.cos(toRad(cfg.lat)) * Math.cos(toRad(lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function agoLabel(obsDt) {
+  const days = daysAgo(obsDt);
+  if (days >= 900) return "";
+  const hours = days * 24;
+  if (hours < 1) return "under an hour ago";
+  if (hours < 48) return `${Math.round(hours)} h ago`;
+  return `${Math.round(days)} d ago`;
+}
+
+function highlight(tileEl, o) {
+  tileEl.classList.add("is-hover");
+  const tip = document.getElementById("tip");
+  tip.innerHTML = "";
+
+  const nm = document.createElement("span");
+  nm.className = "nm";
+  nm.textContent = o.comName;
+  tip.appendChild(nm);
+
+  const whoBits = peopleOf(cfg).filter((p) => needsFor(o, p.id)).map((p) => p.label);
+  if (whoBits.length) {
+    const who = document.createElement("span");
+    who.className = "soft";
+    const verb = whoBits.length === 1 ? "needs" : "need";
+    who.textContent = ` — ${whoBits.join(" & ")} ${verb} this`;
+    tip.appendChild(who);
+  }
+
+  const where = document.createElement("span");
+  where.className = "soft";
+  const mi = milesFrom(o.lat, o.lng);
+  const bits = [];
+  // eBird personal locations often embed "US-CO 39.55213, -104.92426" — trim it.
+  const loc = (o.locName || "")
+    .replace(/,?\s*[A-Z]{2}-[A-Z]{2}\s+-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?\s*$/, "")
+    .trim();
+  if (loc) bits.push(loc.length > 44 ? loc.slice(0, 42) + "…" : loc);
+  if (mi != null) bits.push(`${mi < 10 ? mi.toFixed(1) : Math.round(mi)} mi`);
+  const ago = agoLabel(o.obsDt);
+  if (ago) bits.push(ago);
+  if (bits.length) where.textContent = ` · ${bits.join(" · ")}`;
+  tip.appendChild(where);
+
+  tip.classList.add("show");
+  tip.setAttribute("aria-hidden", "false");
+}
+
+function unhighlight(tileEl) {
+  tileEl.classList.remove("is-hover");
+  const tip = document.getElementById("tip");
+  tip.classList.remove("show");
+  tip.setAttribute("aria-hidden", "true");
+}
+
+// ---- silhouette (alpha-mask) cache --------------------------------------
+// Each bird packs by its actual shape, not a square box, so small birds nest
+// into the empty space around a big bird's spread wings (AvianVisitors' trick).
+const CELL = 9;      // world px per occupancy cell
+const PAD_CELLS = 2; // min gap between birds, in cells (keeps them from touching)
+const silCache = {};
+
+function loadImg(src) {
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+}
+
+async function ensureSil(url) {
+  if (silCache[url]) return silCache[url];
+  let sil;
+  try {
+    const img = await loadImg(url);
+    const nw = img.naturalWidth || 1, nh = img.naturalHeight || 1;
+    const RES = 30;
+    let gw, gh;
+    if (nw >= nh) { gw = RES; gh = Math.max(1, Math.round(RES * nh / nw)); }
+    else { gh = RES; gw = Math.max(1, Math.round(RES * nw / nh)); }
+    const c = document.createElement("canvas"); c.width = gw; c.height = gh;
+    const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, gw, gh);
+    const data = ctx.getImageData(0, 0, gw, gh).data;
+    const set = new Set();
+    for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++)
+      if (data[(j * gw + i) * 4 + 3] > 20) set.add(i + "|" + j); // low thresh keeps thin legs/bills/wingtips
+    if (!set.size) set.add("0|0");
+    sil = { ar: nw / nh, gw, gh, set };
+  } catch {
+    const set = new Set(); for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) set.add(i + "|" + j);
+    sil = { ar: 1, gw: 6, gh: 6, set };
+  }
+  silCache[url] = sil; return sil;
+}
+
+// Spiral pack by silhouette: biggest bird at the centre, each next one spirals
+// out to the first spot where its occupied cells (plus a 1-cell gap) don't hit
+// an already-placed bird's cells.
+function pack(items, aspect) {
+  const asp = aspect || 1; // >1 spreads the flock horizontally into an oval
+  const occupied = new Set();
+  for (const it of items) {
+    const ngx = Math.max(1, Math.ceil(it.W / CELL)), ngy = Math.max(1, Math.ceil(it.H / CELL));
+    const local = [];
+    for (let gx = 0; gx < ngx; gx++) for (let gy = 0; gy < ngy; gy++) {
+      const si = Math.min(it.sil.gw - 1, Math.floor((gx + 0.5) * CELL / it.W * it.sil.gw));
+      const sj = Math.min(it.sil.gh - 1, Math.floor((gy + 0.5) * CELL / it.H * it.sil.gh));
+      if (it.sil.set.has(si + "|" + sj)) local.push([gx, gy]);
+    }
+    if (!local.length) local.push([0, 0]);
+    it.local = local;
+  }
+  const fits = (it, ogx, ogy) => {
+    for (const [di, dj] of it.local) {
+      const gx = ogx + di, gy = ogy + dj;
+      for (let px = -PAD_CELLS; px <= PAD_CELLS; px++)
+        for (let py = -PAD_CELLS; py <= PAD_CELLS; py++)
+          if (occupied.has((gx + px) + "|" + (gy + py))) return false;
+    }
+    return true;
+  };
+  const commit = (it, ogx, ogy) => { for (const [di, dj] of it.local) occupied.add((ogx + di) + "|" + (ogy + dj)); };
+  items.forEach((it, i) => {
+    let cx = 0, cy = 0;
+    if (i > 0) {
+      let a = 0, r = 0;
+      for (let k = 0; k < 60000; k++) {
+        cx = r * asp * Math.cos(a); cy = r * Math.sin(a);
+        const ogx = Math.round((cx - it.W / 2) / CELL), ogy = Math.round((cy - it.H / 2) / CELL);
+        if (fits(it, ogx, ogy)) break;
+        a += 0.3; r += 0.45;
+      }
+    }
+    it.cx = cx; it.cy = cy;
+    commit(it, Math.round((cx - it.W / 2) / CELL), Math.round((cy - it.H / 2) / CELL));
+  });
+}
+
+async function layout() {
+  const collage = document.getElementById("collage");
+  const emptyEl = document.getElementById("empty");
+  collage.innerHTML = "";
+  placed = []; hovered = null;
+  const tip = document.getElementById("tip");
+  tip.classList.remove("show"); tip.setAttribute("aria-hidden", "true");
+  emptyEl.style.display = "none";
+
+  const windowDays = (cfg && cfg.days) || 30;
+  const whose = (cfg && cfg.whose) || "both";
+  const kept = ALL.filter((o) => {
+    if (daysAgo(o.obsDt) > windowDays + 0.999) return false;
+    if (whose === "both") return needsAny(o);
+    return needsFor(o, whose);
+  });
+
+  const people = peopleOf(cfg);
+  const labels = people.map((p) => p.label);
+  const whoLabel = whose === "both"
+    ? (labels.join(" or ") || "anyone")
+    : ((people.find((p) => p.id === whose) || {}).label || whose);
+  const whoVerb = whose === "both" && people.length > 1 ? "need" : "needs";
+  const fetchedStr = fetchedAt ? new Date(fetchedAt * 1000).toLocaleString() : "—";
+  let status = cfg
+    ? `${kept.length} species ${whoLabel} ${whoVerb} · within ${cfg.dist_miles} mi · last ${windowDays} day${windowDays === 1 ? "" : "s"} · sightings as of ${fetchedStr}`
+    : "";
+  if (cfg && cfg.life_counts) {
+    const missing = people.filter((p) => !cfg.life_counts[p.id]).map((p) => p.label);
+    if (missing.length) status += ` · ${missing.join(" & ")}'s life list not uploaded (tap ⚙)`;
+  }
+  document.getElementById("status").textContent = status;
+
+  if (!kept.length) {
+    emptyEl.textContent = `Nothing ${whoLabel} ${whoVerb} has been reported nearby in this window.`;
+    emptyEl.style.display = "block";
+    return;
+  }
+
+  const FLIGHT_SCALE = 1.3; // wingspan is wider than body length, so fly bigger
+  const maxLen = Math.max(...kept.map((o) => o.lengthIn));
+  const items = kept.map((o) => {
+    let s = BASE * Math.max(o.lengthIn / maxLen, MIN / BASE);
+    if (o.pose === "flight") s *= FLIGHT_SCALE;
+    return { o, s };
+  });
+
+  // Load each bird's silhouette, then size its tile so its AREA (W*H) tracks
+  // length² — the bird's on-screen bulk is the same whatever its pose/aspect,
+  // so a compact upright bird no longer looks tiny beside a spread one of
+  // similar size. Tile aspect = image aspect, so no letterbox either.
+  await Promise.all(items.map(async (it) => {
+    it.sil = await ensureSil(it.o.img);
+    const ar = Math.max(0.33, Math.min(3.2, it.sil.ar)); // allow herons/swifts (tall) & loons/skimmers (long)
+    const rt = Math.sqrt(ar);
+    it.W = Math.round(it.s * rt);
+    it.H = Math.round(it.s / rt);
+  }));
+  items.sort((a, b) => b.s - a.s);
+
+  // Shape the flock to the screen: a circle when portrait/square, an oval that
+  // uses more width on a landscape/panorama monitor (capped so it never gets
+  // too stretched). fit() keeps the margins and bottom-weighting.
+  const availW0 = window.innerWidth - 48, availH0 = window.innerHeight - 76;
+  const flockAspect = Math.max(1, Math.min(2.4, availW0 / availH0));
+  pack(items, flockAspect);
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const it of items) {
+    minX = Math.min(minX, it.cx - it.W / 2); maxX = Math.max(maxX, it.cx + it.W / 2);
+    minY = Math.min(minY, it.cy - it.H / 2); maxY = Math.max(maxY, it.cy + it.H / 2);
+  }
+  const W = maxX - minX, H = maxY - minY;
+
+  placed = [];
+  for (const it of items) {
+    const o = it.o;
+    const left = Math.round(it.cx - it.W / 2 - minX), top = Math.round(it.cy - it.H / 2 - minY);
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = speciesLinkParams(o);
+    a.style.left = `${left}px`;
+    a.style.top = `${top}px`;
+    a.style.width = `${it.W}px`;
+
+    const art = document.createElement("div");
+    art.className = "art";
+    art.style.height = `${it.H}px`;
+    const img = document.createElement("img");
+    img.src = o.img;
+    img.alt = o.comName;
+    img.onerror = () => { img.onerror = null; img.src = "/images/placeholder.svg"; };
+    art.appendChild(img);
+
+    a.append(art);
+    collage.appendChild(a);
+    placed.push({ o, left, top, W: it.W, H: it.H, sil: it.sil, el: a });
+  }
+
+  collage.style.width = `${W}px`;
+  collage.style.height = `${H}px`;
+  flockNaturalW = W;
+  fit(W, H);
+}
+
+function fit(W, H) {
+  const collage = document.getElementById("collage");
+  const sidePad = 24, topPad = 24, bottomPad = 52; // leave room above the footer
+  const availW = window.innerWidth - sidePad * 2;
+  const availH = window.innerHeight - topPad - bottomPad;
+  // Cap the flock at ~80% of the vertical space so there's always slack to bias
+  // upward — giving a grounded, bottom-weighted composition rather than one that
+  // fills edge to edge.
+  const vFill = 0.8;
+  const scale = Math.min(availW / W, (availH * vFill) / H, 1.9);
+  const usedW = W * scale, usedH = H * scale;
+  // Centered left-to-right; sits a little above center (0.34 of the slack above,
+  // ~two-thirds below) so the empty space pools toward the bottom.
+  const offX = sidePad + Math.max(0, (availW - usedW) / 2);
+  const offY = topPad + Math.max(0, (availH - usedH) * 0.34);
+  collage.style.transform = `translate(${offX}px, ${offY}px) scale(${scale})`;
+}
+
+// ---- silhouette hit-testing ---------------------------------------------
+// Maps a cursor point into collage coords, then finds the topmost bird whose
+// actual (non-transparent) silhouette is under it — so a small bird nested in
+// a flying bird's transparent bounding box gets the hover/click, not the big
+// bird's empty rectangle.
+function hitTest(clientX, clientY) {
+  const collage = document.getElementById("collage");
+  const rect = collage.getBoundingClientRect();
+  if (!flockNaturalW || !rect.width) return null;
+  const s = rect.width / flockNaturalW;
+  const lx = (clientX - rect.left) / s, ly = (clientY - rect.top) / s;
+  for (let i = placed.length - 1; i >= 0; i--) { // last-drawn (smallest) on top
+    const p = placed[i];
+    if (lx < p.left || ly < p.top || lx > p.left + p.W || ly > p.top + p.H) continue;
+    const si = Math.min(p.sil.gw - 1, Math.floor((lx - p.left) / p.W * p.sil.gw));
+    const sj = Math.min(p.sil.gh - 1, Math.floor((ly - p.top) / p.H * p.sil.gh));
+    if (p.sil.set.has(si + "|" + sj)) return p;
+  }
+  return null;
+}
+
+(function initHitTesting() {
+  const stage = document.getElementById("stage");
+  let ptrType = "mouse";  // what kind of pointer produced the coming click
+  let touchArmed = null;  // tile identified by the previous tap (touch only)
+  stage.addEventListener("pointerdown", (e) => { ptrType = e.pointerType || "mouse"; });
+  stage.addEventListener("mousemove", (e) => {
+    const hit = hitTest(e.clientX, e.clientY);
+    if (hit === hovered) return;
+    if (hovered) unhighlight(hovered.el);
+    hovered = hit;
+    if (hit) highlight(hit.el, hit.o);
+    stage.style.cursor = hit ? "pointer" : "default";
+  });
+  stage.addEventListener("mouseleave", () => {
+    if (hovered) unhighlight(hovered.el);
+    hovered = null;
+  });
+  stage.addEventListener("click", (e) => {
+    const hit = hitTest(e.clientX, e.clientY);
+    // On touch, the first tap identifies the bird (highlight + name pill) and a
+    // second tap on the same bird opens it — a mouse hover has no touch
+    // equivalent, so without this a tap jumped straight to the detail page.
+    if (ptrType === "touch") {
+      if (!hit) {
+        if (hovered) unhighlight(hovered.el);
+        hovered = touchArmed = null;
+        return;
+      }
+      if (touchArmed !== hit) {
+        if (hovered && hovered !== hit) unhighlight(hovered.el);
+        hovered = touchArmed = hit;
+        highlight(hit.el, hit.o);
+        return;
+      }
+    }
+    if (hit) location.href = speciesLinkParams(hit.o);
+  });
+})();
+
+async function refresh() {
+  const errorEl = document.getElementById("error");
+  errorEl.style.display = "none";
+  try {
+    const [c, nearby] = await Promise.all([fetchConfig(), fetchNearby()]);
+    cfg = c;
+    applyTheme(cfg.theme);
+    ALL = nearby.obs || [];
+    fetchedAt = nearby.fetched_at || 0;
+    await layout();
+  } catch (err) {
+    errorEl.style.display = "block";
+    errorEl.textContent = "Couldn't load data:\n" + err.message;
+    document.getElementById("status").textContent = "";
+  }
+}
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (ALL.length) layout().catch(() => {}); }, 200);
+});
+
+refresh();
+// Re-check hourly; the server only re-polls eBird when its 1h cache expires,
+// so these are cheap local reads that also pick up settings/list changes.
+setInterval(refresh, 60 * 60 * 1000);
+</script>
+</body>
+</html>

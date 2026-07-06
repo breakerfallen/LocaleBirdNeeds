@@ -1,0 +1,7 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" fill="#33302a">
+<ellipse cx="55" cy="53" rx="30" ry="20"/>
+      <circle cx="27" cy="41" r="13"/>
+      <polygon points="15,39 2,43 15,46"/>
+      <polygon points="80,51 100,57 82,62"/>
+      <path d="M50 72 L48 90 M63 72 L65 90" stroke="#33302a" stroke-width="2.6" fill="none"/>
+</svg>
