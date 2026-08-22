@@ -69,13 +69,20 @@
     transition: color 0.15s ease;
   }
   .tile.is-hover .name { color: var(--ink); }
-  /* Nested: positioned per-bird from the run finder, so it overrides the
-     caption's centring entirely. */
-  .tile .name.nested {
-    top: auto; left: auto;
-    margin-top: 0;
-    transform-origin: 50% 50%;
+  /* Nested names are drawn as SVG type on a path traced from the bird's own
+     outline. overflow:visible lets a name carry on past the tile, which is how
+     a long name gets set beside a small drawing. */
+  .tile .nameSvg {
+    position: absolute; left: 0; top: 0;
+    overflow: visible; pointer-events: none;
   }
+  .tile .nameText {
+    font-family: "Hand", "Bradley Hand", "Segoe Script", cursive;
+    font-weight: 600;
+    fill: var(--ink-soft);
+    transition: fill 0.15s ease;
+  }
+  .tile.is-hover .nameText { fill: var(--ink); }
   .tile .art { display: flex; align-items: flex-end; justify-content: center; width: 100%; }
   .tile img {
     display: block; width: 100%; height: 100%; object-fit: contain;
@@ -301,8 +308,9 @@ async function ensureSil(url) {
 // occupied cells, so the nester leaves a gap for the lettering instead of
 // letting it fall across the bird below.
 const LABEL_GAP = 3;         // px between the art and the name
-const LABEL_MIN_TILE = 56;   // don't letter under a bird this small
+const LABEL_MIN_TILE = 56;   // don't letter a bird drawn smaller than this (sqrt of tile area)
 const labelCtx = document.createElement("canvas").getContext("2d");
+let labelUid = 0;
 
 // ---- nested names: find a run of outline worth writing along ---------------
 // After the treatment described at theodore.net/projects/AvianVisitors — the
@@ -323,6 +331,7 @@ const LABEL_BOW = 0.11;    // how far a run may wander off its own chord (of run
 const LABEL_MIN_RUN = 0.22; // shortest usable run, as a share of tile width
 const LABEL_ASC = 0.80;    // Caveat's inked band above the baseline, in em
 const LABEL_DESC = 0.25;   // and below
+const LABEL_EXT_EM = 3.0;  // how far the line may carry past its run, per side, in em
 
 // Least-squares line through (x, y) samples -> {m, b, bow}.
 function fitRun(xs, ys) {
@@ -366,42 +375,89 @@ function bestRun(prof, side, fw, minRunPx) {
   return best;
 }
 
-// True if the whole inked band of the name clears the bird. Sampled across the
-// text's real span, not just the run's — the lettering usually carries on past
-// the edge it rides, and that overhang is exactly where it could plough back
-// into a wing. Anything outside the mask is open paper and counts as clear.
-function bandClear(fine, run, px, fineScale, textWFine) {
-  const band = (LABEL_ASC + LABEL_DESC) * px / fineScale;  // band height, fine px
-  const near = LABEL_NEAR / fineScale;
-  const dir = run.side === "back" ? -1 : 1;                // which way is paper
-  const mid = (run.x0 + run.x1) / 2;
-  const half = Math.max((run.x1 - run.x0) / 2, textWFine / 2);
-  const from = Math.round(mid - half), to = Math.round(mid + half);
+// Build the baseline the lettering will actually ride: the run's own profile,
+// smoothed, then pushed off the silhouette along its local normal. This is the
+// curve handed to <textPath>, so each glyph stands on the bird's own contour
+// rather than on a chord drawn through it.
+function baselineFor(fine, run, px, fineScale, textW) {
+  const dir = run.side === "back" ? -1 : 1;
+  const prof = run.side === "back" ? fine.top : fine.bot;
+  // Baseline sits a hair off the ink: descenders hang toward a back, ascenders
+  // rise toward a belly, so the clearance differs by side.
+  const push = (LABEL_NEAR + (dir < 0 ? LABEL_DESC : LABEL_ASC) * px) / fineScale;
+
+  // Smooth the raw profile — single-pixel steps in the mask would otherwise
+  // make glyphs jitter along the baseline.
+  const raw = [];
+  for (let x = run.x0; x <= run.x1; x++) if (prof[x] >= 0) raw.push([x, prof[x]]);
+  if (raw.length < 4) return null;
+  const K = 5, sm = [];
+  for (let i = 0; i < raw.length; i++) {
+    let sy = 0, n = 0;
+    for (let k = -K; k <= K; k++) { const j = i + k; if (j >= 0 && j < raw.length) { sy += raw[j][1]; n++; } }
+    sm.push([raw[i][0], sy / n]);
+  }
+  // Offset each sample along the local normal, onto the paper side.
+  const pts = [];
+  for (let i = 0; i < sm.length; i++) {
+    const a = sm[Math.max(0, i - 2)], b = sm[Math.min(sm.length - 1, i + 2)];
+    let nx = -(b[1] - a[1]), ny = (b[0] - a[0]);
+    const len = Math.hypot(nx, ny) || 1;
+    nx /= len; ny /= len;
+    if (ny * dir < 0) { nx = -nx; ny = -ny; }   // point onto the paper side
+    pts.push([sm[i][0] + nx * push, sm[i][1] + ny * push]);
+  }
+
+  // Carry the line on past the run along its end tangents until it is long
+  // enough to set the whole name — a run has to point, not contain.
+  const need = (textW / fineScale) * 1.12;
+  const ext = (LABEL_EXT_EM * px) / fineScale;
+  const tang = (p, q) => { const dx = q[0] - p[0], dy = q[1] - p[1]; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; };
+  let plen = 0;
+  for (let i = 1; i < pts.length; i++) plen += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  let grow = Math.min(ext, Math.max(0, (need - plen) / 2));
+  if (grow > 0) {
+    const t0 = tang(pts[1], pts[0]), t1 = tang(pts[pts.length - 2], pts[pts.length - 1]);
+    pts.unshift([pts[0][0] + t0[0] * grow, pts[0][1] + t0[1] * grow]);
+    pts.push([pts[pts.length - 1][0] + t1[0] * grow, pts[pts.length - 1][1] + t1[1] * grow]);
+    plen += grow * 2;
+  }
+  if (plen < need * 0.72) return null;   // still too short to letter along
+
+  return { pts, dir, lenFine: plen };
+}
+
+// True if the whole inked band of the name clears the bird, sampled along the
+// real baseline rather than a chord. Anything off the mask is open paper.
+function pathClear(fine, bl, px, fineScale) {
+  const band = (LABEL_ASC + LABEL_DESC) * px / fineScale;
   let ink = 0, n = 0;
-  for (let x = from; x <= to; x += 2) {
-    const edge = run.m * x + run.b;
+  for (const [x, y] of bl.pts) {
     for (let k = 0; k <= 4; k++) {
       n++;
-      if (x < 0 || x >= fine.fw) continue;                 // past the bird: paper
-      const y = Math.round(edge + dir * (near + (k / 4) * band));
-      if (y < 0 || y >= fine.fh) continue;
-      if (fine.solid[y * fine.fw + x]) ink++;
+      const yy = Math.round(y + bl.dir * (k / 4) * band);   // toward the paper
+      const xx = Math.round(x);
+      if (xx < 0 || xx >= fine.fw || yy < 0 || yy >= fine.fh) continue;
+      if (fine.solid[yy * fine.fw + xx]) ink++;
     }
   }
   return n ? ink / n <= 0.04 : false;
 }
 
-// mode: "off" | "below" | "nested". Fills the tile's label geometry and the
-// footprint the packer must keep clear (labelBox, in tile-local px).
 function measureLabels(items, mode) {
   for (const it of items) {
     it.label = null; it.labelW = 0; it.labelH = 0; it.labelPx = 0; it.labelBox = null;
     if (mode === "off") continue;
     const name = it.o.comName || it.o.sciName;
-    if (!name || it.W < LABEL_MIN_TILE) continue;
-    // Size tracks the tile so the lettering stays in proportion across a flock
-    // that runs from a kinglet to a crane.
-    const px = Math.round(Math.max(12, Math.min(20, it.W * 0.14)));
+    // Judge the drawing by its bulk, not its width. Tiles are sized so W*H
+    // tracks length², so sqrt(W*H) is the bird's on-screen size whatever its
+    // pose — width alone quietly punishes upright birds, and an owl or a
+    // bittern would go unnamed beside a shorter but wider sandpiper.
+    const size = Math.sqrt(it.W * it.H);
+    if (!name || size < LABEL_MIN_TILE) continue;
+    // Type tracks that same size, so lettering stays in proportion across a
+    // flock that runs from a kinglet to a crane.
+    const px = Math.round(Math.max(12, Math.min(20, size * 0.14)));
     labelCtx.font = `600 ${px}px Hand, cursive`;
     const textW = Math.ceil(labelCtx.measureText(name).width);
     it.labelPx = px;
@@ -409,27 +465,36 @@ function measureLabels(items, mode) {
     if (mode === "nested" && it.fine) {
       const fine = it.fine;
       const fineScale = it.W / fine.fw;           // fine px -> tile px
-      const minRunPx = Math.max(6, (LABEL_MIN_RUN * it.W) / fineScale);
-      let run = bestRun(fine.top, "back", fine.fw, minRunPx);
+      // A share of the mask's own width — the fine mask is normalised, so this
+      // is the same demand on every bird regardless of how big it is drawn.
+      const minRunPx = Math.max(6, LABEL_MIN_RUN * fine.fw);
+      const back = bestRun(fine.top, "back", fine.fw, minRunPx);
       const belly = bestRun(fine.bot, "belly", fine.fw, minRunPx);
-      // Prefer whichever edge is longer and flatter; a tie goes to the back,
-      // which is where a name reads most naturally on a perched bird.
-      if (belly && (!run || belly.score > run.score * 1.08)) run = belly;
-      if (run && bandClear(fine, run, px, fineScale, textW / fineScale)) {
-        const dir = run.side === "back" ? -1 : 1;
-        const angle = Math.atan(run.m) * 180 / Math.PI;
-        // Baseline midpoint, in tile px, pushed onto the paper side.
-        const mxF = (run.x0 + run.x1) / 2;
-        const myF = run.m * mxF + run.b;
-        const cx = mxF * fineScale;
-        const cy = myF * fineScale + dir * (LABEL_NEAR + (dir < 0 ? LABEL_ASC : LABEL_DESC) * px);
-        it.label = { mode: "nested", name, px, w: textW, angle, cx, cy };
-        // Reserved box: the rotated text's axis-aligned bounds around (cx, cy).
-        const rad = Math.abs(run.m) ? Math.atan(run.m) : 0;
-        const h = px * (LABEL_ASC + LABEL_DESC);
-        const bw = Math.abs(textW * Math.cos(rad)) + Math.abs(h * Math.sin(rad));
-        const bh = Math.abs(textW * Math.sin(rad)) + Math.abs(h * Math.cos(rad));
-        it.labelBox = { x0: cx - bw / 2, y0: cy - bh / 2, x1: cx + bw / 2, y1: cy + bh / 2 };
+      // Try the better edge first, then the other — a bird whose back is busy
+      // will often still offer a clean belly, and vice versa.
+      const order = [];
+      if (back) order.push(back);
+      if (belly) order.push(belly);
+      order.sort((a, b) => b.score - a.score);
+      let placed = null;
+      for (const run of order) {
+        const bl = baselineFor(fine, run, px, fineScale, textW);
+        if (bl && pathClear(fine, bl, px, fineScale)) { placed = bl; break; }
+      }
+      if (placed) {
+        // Path in tile px, as a polyline dense enough that glyphs read smooth.
+        const d = placed.pts.map(([x, y], i) =>
+          `${i ? "L" : "M"}${(x * fineScale).toFixed(1)} ${(y * fineScale).toFixed(1)}`).join(" ");
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        const band = (LABEL_ASC + LABEL_DESC) * px;
+        for (const [x, y] of placed.pts) {
+          const tx = x * fineScale, ty = y * fineScale;
+          x0 = Math.min(x0, tx); x1 = Math.max(x1, tx);
+          y0 = Math.min(y0, Math.min(ty, ty - placed.dir * band));
+          y1 = Math.max(y1, Math.max(ty, ty - placed.dir * band));
+        }
+        it.label = { mode: "nested", name, px, d };
+        it.labelBox = { x0, y0, x1, y1 };
         continue;
       }
       // No edge worth writing along — fall through to the caption so no bird
@@ -598,21 +663,37 @@ async function layout() {
     art.appendChild(img);
 
     a.append(art);
-    if (it.label) {
+    if (it.label && it.label.mode === "nested") {
+      // <textPath> sets each glyph on its own local tangent, so the name bends
+      // with the bird's edge instead of standing on a chord through it.
+      const NS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(NS, "svg");
+      svg.setAttribute("class", "nameSvg");
+      svg.setAttribute("width", it.W); svg.setAttribute("height", it.H);
+      svg.setAttribute("viewBox", `0 0 ${it.W} ${it.H}`);
+      const id = `bl${++labelUid}`;
+      const path = document.createElementNS(NS, "path");
+      path.setAttribute("id", id);
+      path.setAttribute("d", it.label.d);
+      path.setAttribute("fill", "none");
+      const defs = document.createElementNS(NS, "defs");
+      defs.appendChild(path);
+      const text = document.createElementNS(NS, "text");
+      text.setAttribute("class", "nameText");
+      text.setAttribute("font-size", it.label.px);
+      const tp = document.createElementNS(NS, "textPath");
+      tp.setAttribute("href", `#${id}`);
+      tp.setAttribute("startOffset", "50%");
+      tp.setAttribute("text-anchor", "middle");
+      tp.textContent = it.label.name;
+      text.appendChild(tp);
+      svg.append(defs, text);
+      a.appendChild(svg);
+    } else if (it.label) {
       const nm = document.createElement("span");
       nm.textContent = it.label.name;
       nm.style.fontSize = `${it.label.px}px`;
-      if (it.label.mode === "nested") {
-        // Set on the line the bird's own edge established, centred on that
-        // baseline; the transform origin is the text's own middle so the
-        // rotation pivots where the run does.
-        nm.className = "name nested";
-        nm.style.left = `${it.label.cx}px`;
-        nm.style.top = `${it.label.cy}px`;
-        nm.style.transform = `translate(-50%, -50%) rotate(${it.label.angle.toFixed(2)}deg)`;
-      } else {
-        nm.className = "name";
-      }
+      nm.className = "name";
       a.appendChild(nm);
     }
     collage.appendChild(a);

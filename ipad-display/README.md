@@ -124,17 +124,20 @@ controls in one place:
 - **Bird names** — **Off** (default) · **Below** · **Nested**. Both on-settings
   write the bird's common name in **Caveat** (a handwriting face, SIL OFL,
   bundled in `app/vendor/fonts/` — no webfont call).
-  **Below** parks a caption under the tile. **Nested** sets the name along a run
-  of the bird's own outline — a stretch of back or belly straight enough to
-  carry it — so it reads as part of the drawing; this follows the treatment
+  **Below** parks a caption under the tile. **Nested** sets the name *on* the
+  bird — the baseline is traced from a run of its own outline (a stretch of back
+  or belly), smoothed, and pushed just off the ink, then the name is set along
+  that curve with SVG `<textPath>`, so each glyph stands on its own local
+  tangent and the writing bends with the drawing. This follows the treatment
   described at
-  [theodore.net/projects/AvianVisitors](https://theodore.net/projects/AvianVisitors/),
-  though it fits a straight baseline to that run rather than bending type along
-  the contour. A bird that offers no run worth writing along falls back to the
-  caption, so nothing goes unnamed, and the whole inked band is proved clear of
-  the silhouette before a placement is accepted. Either way the lettering's box
-  is reserved during packing, and birds under 56 px stay bare. Hover still shows
-  the full pill.
+  [theodore.net/projects/AvianVisitors](https://theodore.net/projects/AvianVisitors/).
+  Where a run is shorter than the name, the line carries on past it along the
+  end tangents — a run has to point, not contain. A bird offering no run worth
+  writing along falls back to the caption, so nothing goes unnamed, and the
+  whole inked band is proved clear of the silhouette before a placement is
+  accepted. Either way the lettering's box is reserved during packing. Birds
+  drawn smaller than 56 px stay bare — measured as √(w×h), so an upright owl
+  isn't punished for being narrow. Hover still shows the full pill.
 - **Fresh arrivals fly** — **Never** · **24 h** (default) · **3 days** ·
   **7 days**: how long a newly-arrived bird is drawn in flight instead of
   perched. *Never* keeps the whole flock perched. (What counts as an *arrival*
