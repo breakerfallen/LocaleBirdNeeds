@@ -34,6 +34,28 @@
   .poses button.active { background: var(--ink); color: var(--paper); }
   h1 { margin: 0 0 4px; font-size: 27px; font-weight: 600; }
   .sci { color: var(--ink-soft); font-style: italic; margin-bottom: 6px; }
+  .tabs { display: flex; gap: 6px; margin: 18px 0 10px; border-bottom: 1px solid var(--paper-edge); }
+  .tabs button {
+    appearance: none; background: none; border: 0; border-bottom: 2px solid transparent;
+    font: inherit; color: var(--ink-soft); padding: 7px 12px; cursor: pointer;
+  }
+  .tabs button.on { color: var(--ink); border-bottom-color: var(--seal); }
+  .mine-obs { border-collapse: collapse; width: 100%; }
+  .mine-obs th, .mine-obs td { text-align: left; padding: 6px 10px 6px 0; vertical-align: top; }
+  .mine-obs th { color: var(--ink-soft); font-weight: normal; }
+  .mine-obs tr + tr td { border-top: 1px solid var(--paper-edge); }
+  .mine-obs .det { color: var(--ink-soft); font-style: italic; }
+  .mine-who { margin: 14px 0 4px; color: var(--ink-soft); }
+  .mine-none { color: var(--ink-soft); }
+  .notecard { margin-top: 22px; }
+  .notecard label { display: block; color: var(--ink-soft); margin-bottom: 6px; }
+  .notecard textarea {
+    width: 100%; box-sizing: border-box; font: inherit; color: var(--ink);
+    background: transparent; border: 1px solid var(--paper-edge); border-radius: 6px;
+    padding: 9px 11px; resize: vertical;
+  }
+  .notecard textarea:focus { outline: none; border-color: var(--ink-soft); }
+  .noterow { min-height: 18px; margin-top: 5px; color: var(--ink-soft); font-size: 14px; }
   .needs { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
   .chip { font-size: 12px; padding: 3px 10px; border-radius: 999px; font-weight: 600; color: #f2efe7; }
   .ext { font-size: 12px; color: var(--ink-soft); text-decoration: none; border: 1px solid var(--paper-edge); border-radius: 999px; padding: 3px 10px; }
@@ -63,16 +85,98 @@
     <div id="status">Loading sightings…</div>
   </div>
 </div>
-<div id="map"></div>
-<table id="table" style="display:none;">
-  <thead><tr><th>Date</th><th>Hotspot</th><th>Count</th></tr></thead>
-  <tbody id="tbody"></tbody>
-</table>
+<div class="tabs" id="tabs">
+  <button data-tab="nearby" class="on">Nearby sightings</button>
+  <button data-tab="mine">Mine</button>
+</div>
+
+<div id="panel-nearby">
+  <div id="map"></div>
+  <table id="table" style="display:none;">
+    <thead><tr><th>Date</th><th>Hotspot</th><th>Count</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div id="panel-mine" style="display:none;">
+  <div id="mine"></div>
+  <div class="notecard">
+    <label for="note">Your notes on this bird</label>
+    <textarea id="note" rows="5" placeholder="Field marks, where you look for it, what it sounded like…"></textarea>
+    <div class="noterow"><span id="notestate"></span></div>
+  </div>
+</div>
 <div id="error" style="display:none;"></div>
 
 <script src="app.js"></script>
 <script src="vendor/leaflet.js"></script>
 <script>
+// ---- your own record of this bird -----------------------------------------
+// Straight from the eBird "Download my data" export, which is the only route to
+// personal history: the API's key identifies the app, not the observer, so
+// nothing there returns your own sightings.
+function renderMine(mine, people, common) {
+  const host = document.getElementById("mine");
+  const ids = Object.keys(mine);
+  if (!ids.length) {
+    host.innerHTML = `<p class="mine-none">No recorded sightings of ${escapeHTML(common)}. ` +
+      `Upload an eBird <b>Download my data</b> export on the ⚙ page and your own ` +
+      `observations show up here.</p>`;
+    return;
+  }
+  const label = (id) => (people.find((p) => p.id === id) || {}).label || id;
+  host.innerHTML = ids.map((id) => {
+    const rows = mine[id].map((r) => `
+      <tr>
+        <td>${escapeHTML(fmtDate(r.date + " " + (r.time || "00:00")))}${r.time ? " " + escapeHTML(r.time) : ""}</td>
+        <td>${escapeHTML(r.loc || "")}${r.details ? `<div class="det">${escapeHTML(r.details)}</div>` : ""}</td>
+        <td>${escapeHTML(r.count || "")}</td>
+      </tr>`).join("");
+    return `<div class="mine-who">${escapeHTML(label(id))} — ${mine[id].length} ` +
+      `sighting${mine[id].length === 1 ? "" : "s"}</div>` +
+      `<table class="mine-obs"><thead><tr><th>Date</th><th>Where</th><th>Count</th></tr></thead>` +
+      `<tbody>${rows}</tbody></table>`;
+  }).join("");
+}
+
+// Notes save themselves a beat after you stop typing — a kiosk has no obvious
+// moment to press Save, and losing a note to a stray tab switch would be worse
+// than an extra write.
+function wireNote(code, initial) {
+  const box = document.getElementById("note");
+  const state = document.getElementById("notestate");
+  box.value = initial;
+  let timer = null, last = initial;
+  box.addEventListener("input", () => {
+    clearTimeout(timer);
+    state.textContent = "";
+    timer = setTimeout(async () => {
+      const text = box.value;
+      if (text === last) return;
+      try {
+        await getJSON("/api/note", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, text }),
+        });
+        last = text;
+        state.textContent = text ? "Saved" : "Note cleared";
+      } catch (e) {
+        state.textContent = "Couldn't save: " + e.message;
+      }
+    }, 700);
+  });
+}
+
+document.getElementById("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  for (const x of e.currentTarget.querySelectorAll("button")) x.classList.toggle("on", x === b);
+  document.getElementById("panel-nearby").style.display = b.dataset.tab === "nearby" ? "" : "none";
+  document.getElementById("panel-mine").style.display = b.dataset.tab === "mine" ? "" : "none";
+  // Leaflet lays out against a hidden container as 0x0, so the map needs a nudge
+  // once its panel is on screen again.
+  if (b.dataset.tab === "nearby" && window._map) window._map.invalidateSize();
+});
+
 async function main() {
   const params = new URLSearchParams(location.search);
   const code = params.get("code");
@@ -86,7 +190,9 @@ async function main() {
   try {
     const cfg = await fetchConfig();
     applyTheme(cfg.theme);
-    const { sightings, info } = await fetchSpecies(code);
+    const { sightings, info, mine, note, people } = await fetchSpecies(code);
+    renderMine(mine || {}, people || peopleOf(cfg), common);
+    wireNote(code, note || "");
     const artEl = document.getElementById("art");
     const cr = info && info.credit;
     if (cr) {
@@ -129,6 +235,7 @@ async function main() {
     let map = null, pts = [];
     try {
       map = L.map("map");
+      window._map = map;   // the tab handler nudges it when its panel reappears
       const dark = document.documentElement.classList.contains("dark");
       const tiles = dark
         ? { url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",

@@ -152,6 +152,31 @@ controls in one place:
 All persist (in `data/settings.json`), so a kiosk keeps them across refreshes.
 The day buttons on the atlas itself stay in sync with this.
 
+## Your own sightings and notes (the **Mine** tab)
+
+Each species' detail page has two tabs. **Nearby sightings** is the map and table
+of recent local eBird reports. **Mine** is your own record of that bird: every
+time you've logged it, where, how many, and whatever you wrote in the field —
+plus a notes box for anything you want to keep.
+
+**Getting your sightings in.** eBird's API can't do this: the key identifies the
+*application*, not you, and every endpoint returns public regional data, so
+there's no route to your own history through it. What works is the export —
+*My eBird → [Download my data](https://ebird.org/ebird/downloadMyData)* — which
+generates a CSV of every observation you've ever submitted. Upload it on the ⚙
+page under **Upload eBird sightings export**. It saves to
+`data/sightings_<id>.json` and, like everything else here, never leaves the
+machine.
+
+That file is one row per *observation*, so it carries what a life list can't:
+dates, places, counts, and your own **Observation Details** — which is why it's
+worth having as well as the life list rather than instead of it. The life list
+still drives what counts as a need; this only fills the Mine tab.
+
+**Notes** save themselves a moment after you stop typing (a kiosk has no obvious
+moment to press Save), and live in `data/notes.json` keyed by species. Clearing
+the box deletes the note.
+
 ## Updating the life lists
 
 Everyone works the same way: each person has a **life list**, and a bird shows
@@ -314,8 +339,9 @@ deliberate pass rather than waiting to notice.
 - `app/` — the pages (`index.html` collage, `atlas.html` atlas, `species.html`
   detail, `settings.html` lists & settings, `app.js`, vendored Leaflet,
   silhouettes + the Caveat font used for optional bird names)
-- `data/` — the life lists, `settings.json`, the species length/shape table,
-  the hourly sightings cache, and the cumulative atlas registry
+- `data/` — the life lists, your sightings export and per-species notes,
+  `settings.json`, the species length/shape table, the hourly sightings cache,
+  and the cumulative atlas registry
 - `images/` — local bird images (silhouettes always; woodblock PNGs if you build them)
 - `build_species_data.py` / `build_silhouettes.py` — regenerate the table and
   silhouettes; `build_images.py` — optional kachō-e illustrations

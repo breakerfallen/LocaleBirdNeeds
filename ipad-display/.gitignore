@@ -4,6 +4,8 @@ config.json
 
 # Personal data & runtime state — regenerated/uploaded per household.
 data/life_*.json
+data/sightings_*.json
+data/notes.json
 data/settings.json
 data/cache_nearby.json
 data/atlas.json

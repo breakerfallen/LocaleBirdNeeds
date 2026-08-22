@@ -215,11 +215,15 @@ function buildPeopleUI(cfg) {
       <div class="uploadrow">
         <button class="mini" id="${p.id}-upload">Upload eBird life list CSV</button>
         <input type="file" id="${p.id}-file" accept=".csv,text/csv">
+        <button class="mini" id="${p.id}-sightings-upload">Upload eBird sightings export</button>
+        <input type="file" id="${p.id}-sightings-file" accept=".csv,text/csv">
+        <div class="sub" id="${p.id}-sightings-state"></div>
       </div>
       <div class="warn" id="${p.id}-warn" style="display:none;">Empty — upload ${escapeHTML(p.label)}&#39;s eBird life list CSV. Until then the collage shows no needs for ${escapeHTML(p.label)}.</div>
       <div id="${p.id}-list" class="listbox"></div>`;
     cols.appendChild(col);
     wireUpload(p.id);
+    wireSightings(p.id);
   }
 }
 
@@ -296,6 +300,31 @@ function wireUpload(person) {
       await loadLists();
     } catch (e) { toast(e.message); }
     finally { btn.disabled = false; btn.textContent = "Upload eBird life list CSV"; file.value = ""; }
+  };
+}
+
+// The full observation export — one row per sighting, so it carries dates,
+// places and your own notes, none of which a life list has. It shows on each
+// species' detail page under "Mine". eBird has no API for personal history (the
+// key identifies the app, not the observer), so this file is the only route.
+function wireSightings(person) {
+  const btn = document.getElementById(`${person}-sightings-upload`);
+  const file = document.getElementById(`${person}-sightings-file`);
+  const state = document.getElementById(`${person}-sightings-state`);
+  btn.onclick = () => file.click();
+  file.onchange = async () => {
+    const f = file.files[0]; if (!f) return;
+    btn.disabled = true; btn.textContent = "Reading…";
+    try {
+      const r = await postLife({ person, action: "sightings", csv: await f.text() });
+      toast(`${LABEL[person]}: ${r.observations} observations of ${r.species} species`);
+      state.textContent = `${r.observations} observations · ${r.species} species`;
+    } catch (e) { toast(e.message); }
+    finally {
+      btn.disabled = false;
+      btn.textContent = "Upload eBird sightings export";
+      file.value = "";
+    }
   };
 }
 

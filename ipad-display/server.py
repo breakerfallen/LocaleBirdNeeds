@@ -204,6 +204,65 @@ def need_status(sci_name, life_sets):
     return {p: not (sci in s or bino in s) for p, s in life_sets.items()}
 
 
+def sightings_path(person):
+    return os.path.join(DATA_DIR, "sightings_%s.json" % person)
+
+
+NOTES_PATH = os.path.join(DATA_DIR, "notes.json")
+
+
+def parse_sightings_csv(text):
+    """Parse an eBird 'Download My Data' export — one row per observation, not
+    per species. Same tolerant header matching as the life-list parser: columns
+    are found by name so order and extra columns don't matter, which is what
+    keeps this working when eBird revises the export.
+
+    Returns {sci_lower: [ {date, time, count, loc, locId, subId, details}, ... ]}
+    newest first. `details` is the observer's own note on that bird, which is
+    the whole reason this file is worth having over a life list."""
+    import csv as csv_mod
+    import io
+    rows = list(csv_mod.reader(io.StringIO(text.lstrip("\ufeff"))))
+    if not rows:
+        return {}
+    header_i, cols = None, {}
+    for i, row in enumerate(rows[:5]):
+        names = {c.strip().lower(): j for j, c in enumerate(row)}
+        if "scientific name" in names and ("date" in names or "obs date" in names):
+            header_i, cols = i, names
+            break
+    if header_i is None:
+        return {}
+
+    def col(row, *names):
+        for n in names:
+            j = cols.get(n)
+            if j is not None and j < len(row):
+                v = (row[j] or "").strip()
+                if v:
+                    return v
+        return ""
+
+    out = {}
+    for row in rows[header_i + 1:]:
+        sci = col(row, "scientific name")
+        if len(sci.split()) < 2:
+            continue
+        out.setdefault(sci.lower(), []).append({
+            "common": col(row, "common name"),
+            "date": col(row, "date", "obs date"),
+            "time": col(row, "time", "obs time"),
+            "count": col(row, "count"),
+            "loc": col(row, "location"),
+            "locId": col(row, "location id"),
+            "subId": col(row, "submission id"),
+            "details": col(row, "observation details", "species comments"),
+        })
+    for v in out.values():
+        v.sort(key=lambda e: (e.get("date") or "", e.get("time") or ""), reverse=True)
+    return out
+
+
 def parse_lifelist_csv(text):
     """Parse an eBird life-list CSV export. Current exports have separate
     'Common Name' and 'Scientific Name' columns (plus 'Category'); older ones
@@ -687,7 +746,18 @@ class Handler(BaseHTTPRequestHandler):
                     life_sets = load_life_sets()
                     active = {p: s for p, s in life_sets.items() if s}
                     info["needs"] = need_status(data[0].get("sciName"), active)
-                return self.send_json({"sightings": data, "info": info})
+                # Your own record of this bird, from the eBird export, plus
+                # whatever you've written about it. Both are local-only.
+                sci = (data[0].get("sciName") if data else "") or qs.get("sci", [""])[0]
+                mine = {}
+                for p in PEOPLE:
+                    rows = read_json(sightings_path(p), {}).get((sci or "").lower(), [])
+                    if rows:
+                        mine[p] = rows
+                note = read_json(NOTES_PATH, {}).get(code, "")
+                return self.send_json({"sightings": data, "info": info,
+                                       "mine": mine, "note": note,
+                                       "people": [{"id": p, "label": PEOPLE_LABELS[p]} for p in PEOPLE]})
 
             if path == "/api/species-art":
                 code = qs.get("code", [""])[0]
@@ -772,7 +842,7 @@ class Handler(BaseHTTPRequestHandler):
     # -- POST (settings + life lists + image uploads) --
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
-        if parsed.path not in ("/api/lifelist", "/api/settings",
+        if parsed.path not in ("/api/lifelist", "/api/settings", "/api/note",
                                "/api/upload-image", "/api/delete-image"):
             return self.send_json({"error": "unknown endpoint"}, 404)
         try:
@@ -781,6 +851,19 @@ class Handler(BaseHTTPRequestHandler):
 
             if parsed.path in ("/api/upload-image", "/api/delete-image"):
                 return self.handle_image(parsed.path, payload)
+
+            if parsed.path == "/api/note":
+                code = (payload.get("code") or "").strip().lower()
+                if not re.fullmatch(r"[a-z0-9]+", code or ""):
+                    return self.send_json({"error": "valid species code required"}, 400)
+                notes = read_json(NOTES_PATH, {})
+                text = (payload.get("text") or "").strip()
+                if text:
+                    notes[code] = text
+                else:
+                    notes.pop(code, None)      # clearing the box deletes the note
+                write_json_atomic(NOTES_PATH, notes)
+                return self.send_json({"ok": True, "saved": bool(text)})
 
             if parsed.path == "/api/settings":
                 cur = load_settings()
@@ -818,6 +901,18 @@ class Handler(BaseHTTPRequestHandler):
                                            "Species column like 'Mallard - Anas platyrhynchos'."}, 400)
                 write_json_atomic(path, entries)
                 return self.send_json({"ok": True, "count": len(entries)})
+
+            if action == "sightings":
+                by_sci = parse_sightings_csv(payload.get("csv") or "")
+                if not by_sci:
+                    return self.send_json({"error": "No observations found in that file. "
+                                           "Expected eBird's 'Download my data' export "
+                                           "(ebird.org/ebird/downloadMyData) — one row per "
+                                           "observation, with Scientific Name and Date columns. "
+                                           "A life-list export won't work here; it has no dates."}, 400)
+                write_json_atomic(sightings_path(person), by_sci)
+                total = sum(len(v) for v in by_sci.values())
+                return self.send_json({"ok": True, "species": len(by_sci), "observations": total})
 
             sci = (payload.get("sci") or "").strip()
             common = (payload.get("common") or "").strip()
