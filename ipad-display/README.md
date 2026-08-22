@@ -55,6 +55,11 @@ cd ipad-display
 python3 server.py
 ```
 
+Run it from your clone — the app and its data live in the same folder. Your
+`config.json`, life lists, sightings, notes, settings, caches and the bundled
+art are all gitignored, so nothing personal is ever staged and there is no
+second copy to keep in step.
+
 It prints the address to open on the display device, e.g. `http://your-mac.local:8080`.
 Leave the Terminal window open while you're using it. `Ctrl-C` stops it. Nothing
 to install — it uses only what ships with macOS Python 3.
