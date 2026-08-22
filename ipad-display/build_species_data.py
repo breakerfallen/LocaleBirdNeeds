@@ -346,6 +346,34 @@ SPECIES = {
     "cygnus olor":               ("Mute Swan", 55, "waterfowl"),
     "branta bernicla":           ("Brant", 25, "waterfowl"),
 
+    # ---- eastern species added with the US-FL art bundle (audit 2026-08-22) --
+    # These arrived on the board with the new illustrations and had no row, so
+    # every one of them drew at the generic 8" fallback: a Red-necked Grebe came
+    # out the size of a Semipalmated Plover, and a White Ibis the size of a
+    # warbler. Lengths are average total body length, bill to tail, matching the
+    # convention above; shapes follow their nearest relatives already listed.
+    "fulica americana":          ("American Coot", 15.5, "waterfowl"),
+    "podiceps grisegena":        ("Red-necked Grebe", 18, "waterfowl"),
+    "eudocimus albus":           ("White Ibis", 25, "wader"),
+    "nyctanassa violacea":       ("Yellow-crowned Night Heron", 24, "wader"),
+    "ictinia mississippiensis":  ("Mississippi Kite", 14, "raptor"),
+    "pluvialis squatarola":      ("Black-bellied Plover", 11.5, "shorebird"),
+    "calidris melanotos":        ("Pectoral Sandpiper", 8.75, "shorebird"),
+    "calidris himantopus":       ("Stilt Sandpiper", 8.5, "shorebird"),
+    "tringa solitaria":          ("Solitary Sandpiper", 8.5, "shorebird"),
+    "picoides dorsalis":         ("American Three-toed Woodpecker", 8.75, "woodpecker"),
+    "tyrannus forficatus":       ("Scissor-tailed Flycatcher", 13, "songbird"),
+    "sayornis phoebe":           ("Eastern Phoebe", 7, "songbird"),
+    "contopus virens":           ("Eastern Wood-Pewee", 6.25, "songbird"),
+    "vireo olivaceus":           ("Red-eyed Vireo", 5, "songbird"),
+    "vireo swainsoni":           ("Western Warbling Vireo", 5.5, "songbird"),
+    "toxostoma rufum":           ("Brown Thrasher", 11.5, "songbird"),
+    "melopsittacus undulatus":   ("Budgerigar", 7, "songbird"),
+    "setophaga pensylvanica":    ("Chestnut-sided Warbler", 5, "songbird"),
+    "setophaga americana":       ("Northern Parula", 4.5, "songbird"),
+    "setophaga aestiva":         ("Northern Yellow Warbler", 5, "songbird"),
+    "icterus spurius":           ("Orchard Oriole", 7.25, "songbird"),
+
     # ---- every bundled illustration now has a length (audit 2026-07-05) ------
     # covers eBird genus renames (Astur, Leuconotopicus, Hesperiphona, Ardea
     # ibis, Leiothlypis, Nannopterum…) plus the repo's West-coast species, so
