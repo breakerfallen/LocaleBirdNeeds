@@ -321,13 +321,12 @@ let labelUid = 0;
 // line is what its fallback tier draws, so the effect survives and the geometry
 // stays honest. Runs are read off the column profiles of the fine mask.
 const LABEL_NEAR = 2;      // px of paper between the silhouette and the letters
-const LABEL_DEG = 40;      // steepest lean that still reads as writing
-// A bird's back is a curve, so a long run never fits a straight line: measured
-// across this library the median bow of a full-width run is ~0.29 of its length.
-// The answer is a shorter run, not a looser line — the type is sized from the
-// tile and carries on past the run along the line that run established, so a
-// run only has to point, not contain.
-const LABEL_BOW = 0.11;    // how far a run may wander off its own chord (of run length)
+const LABEL_DEG = 55;      // steepest overall lean that still reads as writing
+// Bow is no longer a straightness test. When the name was set on a chord drawn
+// through the run, a curved run meant type floating off the bird, so bow had to
+// be small; now the type is set on the run's own curve, so bow IS the effect and
+// the limit only rules out a run that doubles back on itself.
+const LABEL_BOW = 0.34;
 const LABEL_MIN_RUN = 0.22; // shortest usable run, as a share of tile width
 const LABEL_ASC = 0.80;    // Caveat's inked band above the baseline, in em
 const LABEL_DESC = 0.25;   // and below
@@ -335,7 +334,7 @@ const LABEL_EXT_EM = 3.0;  // how far the line may carry past its run, per side,
 // Kept next to the CSS that draws it: canvas measures the name to size the
 // reserved box, so the two must agree or every width is wrong.
 const LABEL_WEIGHT = 400;
-const LABEL_TURN = 38;     // most a baseline may swing end to end, in degrees
+const LABEL_TURN = 78;     // most a baseline may swing end to end, in degrees
 
 // Least-squares line through (x, y) samples -> {m, b, bow}.
 function fitRun(xs, ys) {
@@ -368,8 +367,10 @@ function bestRun(prof, side, fw, minRunPx) {
       if (f.bow > LABEL_BOW * len) continue;
       const deg = Math.abs(Math.atan(f.m) * 180 / Math.PI);
       if (deg > LABEL_DEG) continue;
-      // Longer and flatter wins; a run that spans the drawing reads best.
-      const score = len * (1 - deg / (LABEL_DEG * 2.2));
+      // Longest wins. Flatness used to be rewarded here, which quietly steered
+      // every name onto the straightest scrap of edge a bird had — the reason
+      // they "rounded but not really". A long run follows more of the drawing.
+      const score = len;
       if (!best || score > best.score) {
         best = { score, x0, x1: x0 + len - 1, m: f.m, b: f.b, side, len };
       }
@@ -390,16 +391,31 @@ function baselineFor(fine, run, px, fineScale, textW) {
   // rise toward a belly, so the clearance differs by side.
   const push = (LABEL_NEAR + (dir < 0 ? LABEL_DESC : LABEL_ASC) * px) / fineScale;
 
-  // Smooth the raw profile — single-pixel steps in the mask would otherwise
-  // make glyphs jitter along the baseline.
   const raw = [];
   for (let x = run.x0; x <= run.x1; x++) if (prof[x] >= 0) raw.push([x, prof[x]]);
   if (raw.length < 4) return null;
-  const K = 5, sm = [];
+  const K = 5;
+  // Take the OUTWARD envelope first — the extreme of the profile over the
+  // window, not its average. Averaging lets the line lag behind anything that
+  // rises fast (a goose's neck, a curlew's head) and dip below the outline it
+  // is meant to sit outside; the clearance pass then correctly refuses most of
+  // the run, and a big bird ends up with a caption. The envelope can only sit
+  // further onto the paper, never inside the bird.
+  const env = [];
   for (let i = 0; i < raw.length; i++) {
+    let v = raw[i][1];
+    for (let k = -K; k <= K; k++) {
+      const j = i + k; if (j < 0 || j >= raw.length) continue;
+      v = dir < 0 ? Math.min(v, raw[j][1]) : Math.max(v, raw[j][1]);
+    }
+    env.push([raw[i][0], v]);
+  }
+  // Then smooth the envelope, so glyphs do not jitter on single-pixel steps.
+  const sm = [];
+  for (let i = 0; i < env.length; i++) {
     let sy = 0, n = 0;
-    for (let k = -K; k <= K; k++) { const j = i + k; if (j >= 0 && j < raw.length) { sy += raw[j][1]; n++; } }
-    sm.push([raw[i][0], sy / n]);
+    for (let k = -K; k <= K; k++) { const j = i + k; if (j >= 0 && j < env.length) { sy += env[j][1]; n++; } }
+    sm.push([env[i][0], sy / n]);
   }
   // Offset each sample along the local normal, onto the paper side.
   const pts = [];
@@ -422,13 +438,16 @@ function baselineFor(fine, run, px, fineScale, textW) {
   //   clearance test below actually walks along it. Adding it as one far-away
   //   point left the whole overhang untested, which is how a name ended up
   //   drawn straight across a bird's feet.
-  const need = (textW / fineScale) * 1.12;
+  const need = (textW / fineScale) * 1.06;
   const ext = (LABEL_EXT_EM * px) / fineScale;
   const span = Math.max(2, Math.floor(pts.length * 0.2));
   const tang = (p, q) => { const dx = q[0] - p[0], dy = q[1] - p[1]; const l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; };
   const measure = (a) => { let L = 0; for (let i = 1; i < a.length; i++) L += Math.hypot(a[i][0] - a[i - 1][0], a[i][1] - a[i - 1][1]); return L; };
   let plen = measure(pts);
-  const grow = Math.min(ext, Math.max(0, (need - plen) / 2));
+  // Extend by the whole allowance rather than only the shortfall: the ends are
+  // where a name meets a head or a tail, and the clear-span pass needs slack on
+  // both sides to slide the name into whatever stretch is actually open.
+  const grow = ext;
   if (grow > 0) {
     const STEP = 1.5;
     const t0 = tang(pts[span], pts[0]);                       // outward, at the head
@@ -441,65 +460,95 @@ function baselineFor(fine, run, px, fineScale, textW) {
     pts.unshift(...head); pts.push(...tail);
     plen = measure(pts);
   }
-  if (plen < need * 0.72) return null;   // still too short to letter along
-
-  // How far the line swings end to end. A baseline that turns hard is one
-  // curling round a tail or a pair of feet; the letters follow it round and
-  // print over the bird. Straighter placements exist, or the caption does.
-  const dirAt = (i, j) => { const dx = pts[j][0] - pts[i][0], dy = pts[j][1] - pts[i][1]; return Math.atan2(dy, dx); };
-  const k = Math.max(1, Math.floor(pts.length * 0.15));
-  const turn = Math.abs(dirAt(0, k) - dirAt(pts.length - 1 - k, pts.length - 1)) * 180 / Math.PI;
-  if (Math.min(turn, 360 - turn) > LABEL_TURN) return null;
-
-  return { pts, dir, side: run.side, lenFine: plen };
+  return { pts, dir, side: run.side, lenFine: plen, need };
 }
 
-// True if the name clears the bird. Two tests, because either alone lets a bad
-// placement through:
+// Which points of a candidate baseline the lettering could actually stand on.
+// Two tests per point, because either alone lets a bad placement through:
 //
 //   the baseline is checked against the true column profile, since smoothing
-//   cuts corners and on a steeply rising edge — a heron's neck, an ibis's bill
-//   — the smoothed line can sit inside ink the raw profile knows about; and
-//   the inked band above it is sampled against the mask for everything the
-//   profile cannot see, such as a wing or a leg standing clear of the outline.
-//
-// Sampled at every point along the path, extension included. Columns with no
-// ink are open paper.
-function pathClear(fine, bl, px, fineScale) {
-  // Where the glyphs actually are. Type ascends whichever edge it rides, so the
-  // band runs up from the baseline by the ascender and down by the descender —
-  // it is NOT mirrored per side. Sampling it away from the bird on a belly run
-  // was checking empty paper while the letters climbed into the bird's feet.
+//   cuts corners and on a steep edge — a heron's neck, an ibis's bill — the
+//   smoothed line can sit inside ink the raw profile knows about; and the
+//   inked band is sampled against the mask along the path NORMAL, because a
+//   glyph stands on the local tangent, so where a baseline curves its letters
+//   lean sideways and a vertical band walks straight past them.
+function clearFlags(fine, pts, side, dir, px, fineScale) {
   const asc = LABEL_ASC * px / fineScale, desc = LABEL_DESC * px / fineScale;
   const near = (LABEL_NEAR / fineScale) * 0.8;
-  const prof = bl.side === "back" ? fine.top : fine.bot;
+  const prof = side === "back" ? fine.top : fine.bot;
   const STEPS = 6;
-  const pts = bl.pts;
-  let ink = 0, n = 0;
+  const ok = new Array(pts.length);
   for (let i = 0; i < pts.length; i++) {
     const [x, y] = pts[i];
     const xx = Math.round(x);
-    if (xx >= 0 && xx < fine.fw && prof[xx] >= 0) {
-      // Must sit on the paper side of the real edge, by most of the near gap.
-      if ((y - prof[xx]) * bl.dir < near) return false;
+    let good = true;
+    if (xx >= 0 && xx < fine.fw && prof[xx] >= 0 && (y - prof[xx]) * dir < near) good = false;
+    if (good) {
+      const a = pts[Math.max(0, i - 2)], b = pts[Math.min(pts.length - 1, i + 2)];
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      const L = Math.hypot(dx, dy) || 1;
+      const ux = dy / L, uy = -dx / L;           // glyph "up": tangent turned -90
+      for (let k = 0; k <= STEPS && good; k++) {
+        const t = -desc + (k / STEPS) * (asc + desc);
+        const sx = Math.round(x + ux * t), sy = Math.round(y + uy * t);
+        if (sx < 0 || sx >= fine.fw || sy < 0 || sy >= fine.fh) continue;  // paper
+        if (fine.solid[sy * fine.fw + sx]) good = false;
+      }
     }
-    // A glyph stands on the LOCAL tangent, so its ascender points along the
-    // path's normal — not straight up. Where a baseline curves round a rounded
-    // belly the letters lean sideways into the bird, and a vertical band walks
-    // right past that.
-    const a = pts[Math.max(0, i - 2)], b = pts[Math.min(pts.length - 1, i + 2)];
-    const dx = b[0] - a[0], dy = b[1] - a[1];
-    const L = Math.hypot(dx, dy) || 1;
-    const ux = dy / L, uy = -dx / L;             // glyph "up": tangent turned -90
-    for (let k = 0; k <= STEPS; k++) {
-      n++;
-      const t = -desc + (k / STEPS) * (asc + desc);
-      const sx = Math.round(x + ux * t), sy = Math.round(y + uy * t);
-      if (sx < 0 || sx >= fine.fw || sy < 0 || sy >= fine.fh) continue;
-      if (fine.solid[sy * fine.fw + sx]) ink++;
-    }
+    ok[i] = good;
   }
-  return n ? ink / n <= 0.04 : false;
+  return ok;
+}
+
+// Longest run of consecutive clear points. Trimming beats an all-or-nothing
+// verdict: a long name on a big bird overhangs its run, and that overhang often
+// clips the head at one end — refusing the whole placement for it is what sent
+// every large bird to a caption. Here the blocked tail is simply cut off and
+// what remains is judged on its own length.
+function longestClearSpan(ok) {
+  let bi = 0, bl = 0, i = 0;
+  while (i < ok.length) {
+    if (!ok[i]) { i++; continue; }
+    let j = i;
+    while (j < ok.length && ok[j]) j++;
+    if (j - i > bl) { bl = j - i; bi = i; }
+    i = j;
+  }
+  return [bi, bl];
+}
+
+// Keep only as much of a clear stretch as the name actually needs, centred on
+// it. The clear span is often far longer than the word; reserving all of it
+// inflates every bird's footprint, the packer pushes the flock apart and fit()
+// scales the whole board down to compensate.
+function centreSlice(pts, targetLen) {
+  const total = polyLen(pts);
+  if (total <= targetLen) return pts;
+  const seg = [];
+  for (let i = 1; i < pts.length; i++) seg.push(Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const half = targetLen / 2;
+  let mid = 0, acc = 0;
+  while (mid < seg.length && acc + seg[mid] < total / 2) { acc += seg[mid]; mid++; }
+  let i0 = mid, d = 0;
+  while (i0 > 0 && d < half) { d += seg[i0 - 1]; i0--; }
+  let i1 = mid, e = 0;
+  while (i1 < seg.length && e < half) { e += seg[i1]; i1++; }
+  return pts.slice(i0, i1 + 1);
+}
+
+function polyLen(pts) {
+  let L = 0;
+  for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+  return L;
+}
+
+// How far a baseline swings end to end. A line that turns hard is one curling
+// round a tail or a pair of feet, and the letters follow it round.
+function turnOf(pts) {
+  const k = Math.max(1, Math.floor(pts.length * 0.15));
+  const dirAt = (i, j) => Math.atan2(pts[j][1] - pts[i][1], pts[j][0] - pts[i][0]);
+  const t = Math.abs(dirAt(0, k) - dirAt(pts.length - 1 - k, pts.length - 1)) * 180 / Math.PI;
+  return Math.min(t, 360 - t);
 }
 
 function measureLabels(items, mode) {
@@ -522,7 +571,14 @@ function measureLabels(items, mode) {
 
     if (mode === "nested" && it.fine) {
       const fine = it.fine;
-      const fineScale = it.W / fine.fw;           // fine px -> tile px
+      // Map the mask onto the tile the way the browser actually draws it. The
+      // art is object-fit: contain and the tile's aspect is clamped, so a very
+      // long or very tall bird is letterboxed inside its tile — scaling by
+      // width alone from a 0,0 origin puts the whole baseline in the wrong
+      // place, which is how a name ended up written across a bird.
+      const fineScale = Math.min(it.W / fine.fw, it.H / fine.fh);
+      const offX = (it.W - fine.fw * fineScale) / 2;
+      const offY = (it.H - fine.fh * fineScale) / 2;
       // A share of the mask's own width — the fine mask is normalised, so this
       // is the same demand on every bird regardless of how big it is drawn.
       const minRunPx = Math.max(6, LABEL_MIN_RUN * fine.fw);
@@ -537,16 +593,25 @@ function measureLabels(items, mode) {
       let placed = null;
       for (const run of order) {
         const bl = baselineFor(fine, run, px, fineScale, textW);
-        if (bl && pathClear(fine, bl, px, fineScale)) { placed = bl; break; }
+        if (!bl) continue;
+        const ok = clearFlags(fine, bl.pts, bl.side, bl.dir, px, fineScale);
+        const [i0, n0] = longestClearSpan(ok);
+        if (n0 < 4) continue;
+        const span = bl.pts.slice(i0, i0 + n0);
+        if (polyLen(span) < bl.need) continue;      // not enough clear line
+        const fitted = centreSlice(span, bl.need);
+        if (turnOf(fitted) > LABEL_TURN) continue;  // curls round a tail
+        placed = { pts: fitted, dir: bl.dir, side: bl.side };
+        break;
       }
       if (placed) {
         // Path in tile px, as a polyline dense enough that glyphs read smooth.
         const d = placed.pts.map(([x, y], i) =>
-          `${i ? "L" : "M"}${(x * fineScale).toFixed(1)} ${(y * fineScale).toFixed(1)}`).join(" ");
+          `${i ? "L" : "M"}${(x * fineScale + offX).toFixed(1)} ${(y * fineScale + offY).toFixed(1)}`).join(" ");
         let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
         const band = (LABEL_ASC + LABEL_DESC) * px;
         for (const [x, y] of placed.pts) {
-          const tx = x * fineScale, ty = y * fineScale;
+          const tx = x * fineScale + offX, ty = y * fineScale + offY;
           x0 = Math.min(x0, tx); x1 = Math.max(x1, tx);
           y0 = Math.min(y0, Math.min(ty, ty - placed.dir * band));
           y1 = Math.max(y1, Math.max(ty, ty - placed.dir * band));
