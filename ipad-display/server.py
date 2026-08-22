@@ -273,6 +273,22 @@ def _img_slug(s):
     return re.sub(r"[^a-z ]", "", (s or "").lower()).strip().replace(" ", "-")
 
 
+# eBird splits a species faster than the illustrations get redrawn: a sighting
+# comes back under the new binomial while the art still sits under the old one,
+# so the bird falls through to a silhouette. These aliases point the new name at
+# art that genuinely depicts the same bird.
+#
+# Curated deliberately, NOT derived from eBird's "slash" taxa — a slash means
+# "couldn't tell these apart in the field" (Purple/Cassin's Finch,
+# Cinnamon/Blue-winged Teal), which is not the same claim as "same bird, new
+# name". Only add a pair when the existing illustration is actually right for
+# the new taxon.
+_SLUG_ALIASES = {
+    "setophaga-aestiva": "setophaga-petechia",  # Yellow Warbler split (Northern)
+    "vireo-swainsoni": "vireo-gilvus",          # Warbling Vireo split (Western)
+}
+
+
 def _credit_for(url):
     """Attribution for a resolved /images/... URL, or None for silhouettes."""
     if not url or "/images/" not in url:
@@ -335,11 +351,16 @@ def enrich(obs, table):
     guessed = "lengthIn" not in row
     code = obs.get("speciesCode") or ""
     bslug = _img_slug(binomial(sci))
+    aslug = _SLUG_ALIASES.get(bslug)
     # Real art wins if on disk — keyed by eBird code or by scientific-name slug,
     # perched pose preferred; else the typed sumi-ink silhouette. Never a URL.
+    # Your own code-named art outranks the bundled slug art; a pre-split alias is
+    # the last resort, so new art under the current name always takes over.
     perched = (_find_image(code, "_perched") or _find_image(bslug, "_perched")
-               or _find_image(code) or _find_image(bslug))
-    flight = _find_image(code, "_flight") or _find_image(bslug, "_flight")
+               or _find_image(aslug, "_perched")
+               or _find_image(code) or _find_image(bslug) or _find_image(aslug))
+    flight = (_find_image(code, "_flight") or _find_image(bslug, "_flight")
+              or _find_image(aslug, "_flight"))
     img = perched or ("/vendor/silhouettes/%s.svg?v=3" % shape)
     return {
         "lengthIn": length_in, "shape": shape, "guessedSize": guessed,
