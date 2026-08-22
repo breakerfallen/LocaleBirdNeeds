@@ -334,6 +334,7 @@ const LABEL_EXT_EM = 3.0;  // how far the line may carry past its run, per side,
 // Kept next to the CSS that draws it: canvas measures the name to size the
 // reserved box, so the two must agree or every width is wrong.
 const LABEL_WEIGHT = 400;
+const LABEL_BACK_BIAS = 12; // degrees of bend a belly must beat the back by
 
 // Least-squares line through (x, y) samples -> {m, b, bow}.
 function fitRun(xs, ys) {
@@ -526,10 +527,44 @@ function longestClearSpan(ok) {
   return [bi, bl];
 }
 
+// Cut a polyline between two arc-length marks.
+function sliceByArc(pts, from, to) {
+  const out = [];
+  let d = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const seg = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    const a = d, b = d + seg;
+    if (b >= from && a <= to) {
+      if (!out.length) out.push(pts[i - 1]);
+      out.push(pts[i]);
+    }
+    d = b;
+    if (d > to) break;
+  }
+  return out.length >= 2 ? out : pts.slice(0, 2);
+}
+
+// Where along a clear stretch the name should actually sit. The stretch is
+// usually longer than the word, and its middle is not automatically the best
+// part of it: on a goose the clear line runs from the breast up over the back,
+// and centring drops the name on the steep neck while the long calm back goes
+// unused. Slide a word-length window and keep the flattest one.
+function bestWindow(pts, need, emFine) {
+  const total = polyLen(pts);
+  if (total <= need) return pts;
+  let best = null, bestK = Infinity;
+  const step = Math.max(1, need / 10);
+  for (let from = 0; from + need <= total + 0.01; from += step) {
+    const win = sliceByArc(pts, from, from + need);
+    if (win.length < 4) continue;
+    const k = kinkOf(win, emFine);
+    if (k < bestK) { bestK = k; best = win; }
+  }
+  return best || centreSlice(pts, need);
+}
+
 // Keep only as much of a clear stretch as the name actually needs, centred on
-// it. The clear span is often far longer than the word; reserving all of it
-// inflates every bird's footprint, the packer pushes the flock apart and fit()
-// scales the whole board down to compensate.
+// it. Used as the fallback when no window can be measured.
 function centreSlice(pts, targetLen) {
   const total = polyLen(pts);
   if (total <= targetLen) return pts;
@@ -631,14 +666,20 @@ function measureLabels(items, mode) {
         if (n0 < 4) continue;
         const span = bl.pts.slice(i0, i0 + n0);
         if (polyLen(span) < bl.need) continue;      // not enough clear line
-        const fitted = centreSlice(span, bl.need);
+        const fitted = bestWindow(span, bl.need, emFine);
         // Sharpest local bend decides, and nothing else gates on shape. An
         // end-to-end turn cap used to sit here and had it exactly backwards: a
         // long graceful arc along a back swings a long way end to end and was
         // refused, while a short hook under a belly barely swings at all and
         // sailed through. Local bend is what actually distorts letters, so it
         // both picks the edge and is the only shape test left.
-        const kink = kinkOf(fitted, emFine);
+        // Prefer the back. A name along a bird's back reads as part of the
+        // drawing; the same name under the belly reads as something written
+        // near its feet, and on a standing bird it lands among the legs. Left
+        // to pure bend the goose went to its breast on a 9-degree margin, which
+        // is not worth the placement. The belly has to be clearly calmer, not
+        // marginally, before it wins.
+        const kink = kinkOf(fitted, emFine) + (bl.side === "belly" ? LABEL_BACK_BIAS : 0);
         if (kink < bestKink) { bestKink = kink; placed = { pts: fitted, dir: bl.dir, side: bl.side }; }
       }
       if (placed) {
