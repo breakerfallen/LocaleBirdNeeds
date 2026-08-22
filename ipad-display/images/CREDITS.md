@@ -13,6 +13,12 @@ non-commercial use only, share-alike. Per-image author + license live in
 - **eBird speciesCode-named files shipped with this branch** (e.g.
   `norgos_perched.png`) — created by **Breakerfallen**
   (https://github.com/Breakerfallen).
+- **22 species filling Front Range gaps the main set misses** (e.g.
+  `oreoscoptes-montanus_perched.png`) — from the **US-FL illustration bundle**
+  by **SupraBitKid** (https://github.com/SupraBitKid/AvianVisitors), listed in
+  upstream's `illustration-bundles.md`. Generated art in the same kacho-e
+  style; that fork declares no license of its own, so these are treated as
+  CC BY-NC-SA 4.0 inherited from the parent project.
 - **Anything you add yourself** — via the ⚙ settings uploader or
   `build_images.py` — is credited to you: set `owner_name` in `config.json`
   before uploading.
