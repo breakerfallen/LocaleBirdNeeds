@@ -50,6 +50,8 @@
   button.mini { font-family: inherit; font-size: 13px; padding: 6px 12px; border-radius: 8px; cursor: pointer; border: 1px solid var(--paper-edge); background: #fbf6e8; color: var(--ink); }
   button.mini:active { filter: brightness(0.96); }
   .cols { display: flex; gap: 24px; flex-wrap: wrap; }
+  .src { margin: 4px 0 14px; max-width: 42em; line-height: 1.45; }
+  .src a { color: var(--seal); }
   .col { flex: 1 1 360px; }
   .col .sub { color: var(--ink-soft); font-size: 12px; margin: 0 0 10px; line-height: 1.45; }
   .uploadrow { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
@@ -215,10 +217,15 @@ function buildPeopleUI(cfg) {
       <div class="uploadrow">
         <button class="mini" id="${p.id}-upload">Upload eBird life list CSV</button>
         <input type="file" id="${p.id}-file" accept=".csv,text/csv">
-        <button class="mini" id="${p.id}-sightings-upload">Upload eBird sightings export</button>
-        <input type="file" id="${p.id}-sightings-file" accept=".csv,text/csv">
-        <div class="sub" id="${p.id}-sightings-state"></div>
       </div>
+      <div class="sub src">From <a href="https://ebird.org/lifelist" target="_blank" rel="noopener">ebird.org/lifelist</a> → <b>Download (csv)</b>. Downloads straight away. This is the list that decides what counts as a need.</div>
+
+      <div class="uploadrow">
+        <button class="mini" id="${p.id}-sightings-upload">Upload eBird sightings export</button>
+        <input type="file" id="${p.id}-sightings-file" accept=".zip,.csv,application/zip,text/csv">
+      </div>
+      <div class="sub src">From <a href="https://ebird.org/downloadMyData" target="_blank" rel="noopener">ebird.org/downloadMyData</a>. <b>eBird emails this one</b> rather than handing it over — you request it, then a mail turns up later with a zip. Upload the zip as it arrived; no need to unpack it. Fills the <b>Mine</b> tab on each species page. Doesn&rsquo;t change needs.</div>
+      <div class="sub src" id="${p.id}-sightings-state"></div>
       <div class="warn" id="${p.id}-warn" style="display:none;">Empty — upload ${escapeHTML(p.label)}&#39;s eBird life list CSV. Until then the collage shows no needs for ${escapeHTML(p.label)}.</div>
       <div id="${p.id}-list" class="listbox"></div>`;
     cols.appendChild(col);
@@ -316,7 +323,21 @@ function wireSightings(person) {
     const f = file.files[0]; if (!f) return;
     btn.disabled = true; btn.textContent = "Reading…";
     try {
-      const r = await postLife({ person, action: "sightings", csv: await f.text() });
+      // eBird emails the export as a ZIP. Take it as it arrived rather than
+      // making anyone unpack it first, which on a tablet is a small ordeal.
+      const isZip = /\.zip$/i.test(f.name) || f.type === "application/zip";
+      const payload = { person, action: "sightings" };
+      if (isZip) {
+        const buf = new Uint8Array(await f.arrayBuffer());
+        let bin = "";
+        for (let i = 0; i < buf.length; i += 0x8000) {
+          bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+        }
+        payload.zipB64 = btoa(bin);
+      } else {
+        payload.csv = await f.text();
+      }
+      const r = await postLife(payload);
       toast(`${LABEL[person]}: ${r.observations} observations of ${r.species} species`);
       state.textContent = `${r.observations} observations · ${r.species} species`;
     } catch (e) { toast(e.message); }

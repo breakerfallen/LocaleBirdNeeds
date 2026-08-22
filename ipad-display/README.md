@@ -161,12 +161,18 @@ plus a notes box for anything you want to keep.
 
 **Getting your sightings in.** eBird's API can't do this: the key identifies the
 *application*, not you, and every endpoint returns public regional data, so
-there's no route to your own history through it. What works is the export —
-*My eBird → [Download my data](https://ebird.org/ebird/downloadMyData)* — which
-generates a CSV of every observation you've ever submitted. Upload it on the ⚙
-page under **Upload eBird sightings export**. It saves to
-`data/sightings_<id>.json` and, like everything else here, never leaves the
-machine.
+there's no route to your own history through it — there is no "my sightings"
+call to make. The only route is the export at
+[ebird.org/downloadMyData](https://ebird.org/downloadMyData), and be warned that
+eBird **emails** it rather than handing it over: you request it, and a mail turns
+up later with a zip. Upload that zip on the ⚙ page under **Upload eBird sightings
+export** exactly as it arrived — the server reads the CSV out of the archive, so
+there's nothing to unpack, which matters if you're doing this on a tablet. It
+saves to `data/sightings_<id>.json` and, like everything else here, never leaves
+the machine.
+
+Both uploads carry a note on the ⚙ page saying where to fetch the file, since
+they come from two different places and only one of them is instant.
 
 That file is one row per *observation*, so it carries what a life list can't:
 dates, places, counts, and your own **Observation Details** — which is why it's

@@ -903,13 +903,38 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"ok": True, "count": len(entries)})
 
             if action == "sightings":
-                by_sci = parse_sightings_csv(payload.get("csv") or "")
+                text = payload.get("csv") or ""
+                if payload.get("zipB64"):
+                    # eBird does not hand you the file: you request it, and some
+                    # time later an email arrives with a ZIP. Rather than make
+                    # you unpack it — which on an iPad is a small ordeal — take
+                    # the archive as it came and read the CSV out of it here.
+                    import base64 as _b64, io as _io, zipfile as _zip
+                    try:
+                        blob = _b64.b64decode(payload["zipB64"], validate=True)
+                    except Exception:
+                        return self.send_json({"error": "That upload was not readable."}, 400)
+                    if len(blob) > 60 * 1024 * 1024:
+                        return self.send_json({"error": "That archive is over 60 MB."}, 400)
+                    try:
+                        zf = _zip.ZipFile(_io.BytesIO(blob))
+                        names = [n for n in zf.namelist()
+                                 if n.lower().endswith(".csv") and not n.startswith("__MACOSX/")]
+                        if not names:
+                            return self.send_json({"error": "No CSV inside that zip. eBird's "
+                                                   "export archive should contain MyEBirdData.csv."}, 400)
+                        text = zf.read(names[0]).decode("utf-8", "replace")
+                    except _zip.BadZipFile:
+                        return self.send_json({"error": "That file isn't a readable zip."}, 400)
+                by_sci = parse_sightings_csv(text)
                 if not by_sci:
                     return self.send_json({"error": "No observations found in that file. "
                                            "Expected eBird's 'Download my data' export "
                                            "(ebird.org/ebird/downloadMyData) — one row per "
                                            "observation, with Scientific Name and Date columns. "
                                            "A life-list export won't work here; it has no dates."}, 400)
+                # eBird's export is the whole history, so it can be large; keep
+                # the reply small and let the page say what landed.
                 write_json_atomic(sightings_path(person), by_sci)
                 total = sum(len(v) for v in by_sci.values())
                 return self.send_json({"ok": True, "species": len(by_sci), "observations": total})
