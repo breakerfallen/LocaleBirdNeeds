@@ -132,7 +132,8 @@ controls in one place:
   described at
   [theodore.net/projects/AvianVisitors](https://theodore.net/projects/AvianVisitors/).
   Where a run is shorter than the name, the line carries on past it along the
-  end tangents — a run has to point, not contain. A bird offering no run worth
+  end tangents — a run has to point, not contain. A baseline that would swing
+  too far end to end is refused rather than let the name curl round a tail. A bird offering no run worth
   writing along falls back to the caption, so nothing goes unnamed, and the
   whole inked band is proved clear of the silhouette before a placement is
   accepted. Either way the lettering's box is reserved during packing. Birds
