@@ -44,7 +44,31 @@
   /* Tiles don't take clicks themselves — a global handler hit-tests the actual
      silhouette so a small bird inside a flying bird's transparent box is still
      clickable. */
+  /* Handwritten face for the optional bird names (Caveat, SIL OFL — license
+     sits beside the file). Vendored locally like everything else: the running
+     app makes no requests off this machine. */
+  @font-face {
+    font-family: "Hand";
+    src: url("vendor/fonts/Caveat.ttf") format("truetype");
+    font-weight: 400 700;
+    font-display: swap;
+  }
   .tile { position: absolute; text-decoration: none; color: inherit; text-align: center; pointer-events: none; }
+  /* A name under the bird, angled like a pencil note in a field notebook. The
+     packer reserved this strip, so it never lands on a neighbour. Muted rather
+     than full-ink so the birds still read first. */
+  .tile .name {
+    position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%) rotate(-2deg);
+    margin-top: 1px;
+    font-family: "Hand", "Bradley Hand", "Segoe Script", cursive;
+    font-weight: 600;
+    color: var(--ink-soft);
+    white-space: nowrap; line-height: 1.2;
+    pointer-events: none;
+    transition: color 0.15s ease;
+  }
+  .tile.is-hover .name { color: var(--ink); }
   .tile .art { display: flex; align-items: flex-end; justify-content: center; width: 100%; }
   .tile img {
     display: block; width: 100%; height: 100%; object-fit: contain;
@@ -229,6 +253,30 @@ async function ensureSil(url) {
 // Spiral pack by silhouette: biggest bird at the centre, each next one spirals
 // out to the first spot where its occupied cells (plus a 1-cell gap) don't hit
 // an already-placed bird's cells.
+// ---- optional bird names ------------------------------------------------
+// The name is measured before packing and its strip is added to the tile's
+// occupied cells, so the nester leaves a gap for the lettering instead of
+// letting it fall across the bird below.
+const LABEL_GAP = 3;         // px between the art and the name
+const LABEL_MIN_TILE = 56;   // don't letter under a bird this small
+const labelCtx = document.createElement("canvas").getContext("2d");
+
+function measureLabels(items, on) {
+  for (const it of items) {
+    it.labelW = 0; it.labelH = 0; it.labelPx = 0;
+    if (!on) continue;
+    const name = it.o.comName || it.o.sciName;
+    if (!name || it.W < LABEL_MIN_TILE) continue;
+    // Size tracks the tile so the lettering stays in proportion across a flock
+    // that runs from a kinglet to a crane.
+    const px = Math.round(Math.max(12, Math.min(20, it.W * 0.14)));
+    labelCtx.font = `600 ${px}px Hand, cursive`;
+    it.labelPx = px;
+    it.labelW = Math.min(Math.ceil(labelCtx.measureText(name).width) + 6, it.W * 1.7);
+    it.labelH = LABEL_GAP + Math.round(px * 1.2);
+  }
+}
+
 function pack(items, aspect) {
   const asp = aspect || 1; // >1 spreads the flock horizontally into an oval
   const occupied = new Set();
@@ -241,6 +289,17 @@ function pack(items, aspect) {
       if (it.sil.set.has(si + "|" + sj)) local.push([gx, gy]);
     }
     if (!local.length) local.push([0, 0]);
+    // Reserve the name strip: a solid block under the art, centred on the tile.
+    // Offsets may go negative when the name is wider than the bird — fine, they
+    // are just deltas from the tile origin.
+    if (it.labelH) {
+      const lx0 = Math.floor((it.W - it.labelW) / 2 / CELL);
+      const lx1 = Math.ceil((it.W + it.labelW) / 2 / CELL);
+      const ly0 = Math.floor(it.H / CELL);
+      const ly1 = Math.ceil((it.H + it.labelH) / CELL);
+      for (let gx = lx0; gx <= lx1; gx++)
+        for (let gy = ly0; gy <= ly1; gy++) local.push([gx, gy]);
+    }
     it.local = local;
   }
   const fits = (it, ogx, ogy) => {
@@ -334,12 +393,16 @@ async function layout() {
   // too stretched). fit() keeps the margins and bottom-weighting.
   const availW0 = window.innerWidth - 48, availH0 = window.innerHeight - 76;
   const flockAspect = Math.max(1, Math.min(2.4, availW0 / availH0));
+  measureLabels(items, !!(cfg && cfg.labels));
   pack(items, flockAspect);
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const it of items) {
-    minX = Math.min(minX, it.cx - it.W / 2); maxX = Math.max(maxX, it.cx + it.W / 2);
-    minY = Math.min(minY, it.cy - it.H / 2); maxY = Math.max(maxY, it.cy + it.H / 2);
+    // A name can hang below the art and wider than it, so it counts toward the
+    // flock's extent — otherwise fit() would scale the lettering off-screen.
+    const over = it.labelW > it.W ? (it.labelW - it.W) / 2 : 0;
+    minX = Math.min(minX, it.cx - it.W / 2 - over); maxX = Math.max(maxX, it.cx + it.W / 2 + over);
+    minY = Math.min(minY, it.cy - it.H / 2); maxY = Math.max(maxY, it.cy + it.H / 2 + it.labelH);
   }
   const W = maxX - minX, H = maxY - minY;
 
@@ -364,6 +427,13 @@ async function layout() {
     art.appendChild(img);
 
     a.append(art);
+    if (it.labelH) {
+      const nm = document.createElement("span");
+      nm.className = "name";
+      nm.style.fontSize = `${it.labelPx}px`;
+      nm.textContent = o.comName || o.sciName;
+      a.appendChild(nm);
+    }
     collage.appendChild(a);
     placed.push({ o, left, top, W: it.W, H: it.H, sil: it.sil, el: a });
   }
@@ -476,6 +546,13 @@ window.addEventListener("resize", () => {
 });
 
 refresh();
+// The first pack measures names with fallback metrics if the handwriting face
+// hasn't arrived yet, which packs them at the wrong width. Re-lay once it has.
+if (document.fonts && document.fonts.load) {
+  document.fonts.load("600 16px Hand")
+    .then(() => { if (cfg && cfg.labels && ALL.length) return layout(); })
+    .catch(() => {});
+}
 // Re-check hourly; the server only re-polls eBird when its 1h cache expires,
 // so these are cheap local reads that also pick up settings/list changes.
 setInterval(refresh, 60 * 60 * 1000);

@@ -64,6 +64,8 @@ CONTENT_TYPES = {
     ".jpeg": "image/jpeg",
     ".webp": "image/webp",
     ".ico": "image/x-icon",
+    ".ttf": "font/ttf",
+    ".txt": "text/plain; charset=utf-8",
 }
 
 
@@ -133,7 +135,11 @@ def load_settings():
     theme = s.get("theme", "light")
     if theme not in ("light", "dark"):
         theme = "light"
-    return {"dist_miles": dist_mi, "days": days, "whose": whose, "theme": theme}
+    # Names under the birds. Off by default — the collage is meant to read as a
+    # picture first, and you can always hover for the pill.
+    labels = bool(s.get("labels", False))
+    return {"dist_miles": dist_mi, "days": days, "whose": whose, "theme": theme,
+            "labels": labels}
 
 
 def effective_dist_km(settings):
@@ -403,8 +409,14 @@ def _gap_days(prev_obs, new_obs):
     return (b - a).days if (a and b) else 0
 
 
-def _update_atlas(obs_list, fetched_at):
+def _update_atlas(obs_list, fetched_at, prev_poll_at=0):
     atlas = read_json(ATLAS_PATH, {})
+    # If the app itself was away longer than the re-arrival window, this pull
+    # cannot tell "the bird came back" from "nobody was watching": every species
+    # shows a gap since lastSeen and the entire board takes flight at once. Treat
+    # the catch-up pull as a fresh baseline instead — record what is here, flag
+    # nothing as new, and let flight reappear organically on the next poll.
+    catching_up = bool(prev_poll_at) and (fetched_at - prev_poll_at) >= ARRIVAL_GAP_DAYS * 86400
     for o in obs_list:
         code = o.get("speciesCode")
         if not code:
@@ -414,7 +426,8 @@ def _update_atlas(obs_list, fetched_at):
         # Stamp the arrival time when the species is brand new, or when it comes
         # back after an absence; otherwise carry the existing stamp (0 = legacy /
         # continuing, so it won't suddenly fly).
-        arrived = (not cur) or _gap_days(cur.get("lastSeen"), new_dt) >= ARRIVAL_GAP_DAYS
+        arrived = (not catching_up) and (
+            (not cur) or _gap_days(cur.get("lastSeen"), new_dt) >= ARRIVAL_GAP_DAYS)
         first_fetched = fetched_at if arrived else cur.get("firstFetchedAt", 0)
         entry = {
             "speciesCode": code,
@@ -457,7 +470,7 @@ def get_nearby_obs():
         fetched_at = _time.time()
         write_json_atomic(NEARBY_CACHE_PATH, {
             "fetched_at": fetched_at, "dist_km": dist_km, "obs": obs})
-        _update_atlas(obs, fetched_at)
+        _update_atlas(obs, fetched_at, cache.get("fetched_at", 0))
         return obs, fetched_at
 
 
@@ -578,6 +591,7 @@ class Handler(BaseHTTPRequestHandler):
                     "dist_km": effective_dist_km(st), "dist_miles": st["dist_miles"],
                     "max_dist_miles": MAX_DIST_MI,
                     "days": st["days"], "whose": st["whose"], "theme": st["theme"],
+                    "labels": st["labels"],
                     "back_days": CONFIG["back_days"],
                     "place_label": CONFIG.get("place_label", CONFIG.get("location_label", "")),
                     "has_key": bool(CONFIG.get("ebird_api_key")),
@@ -758,6 +772,8 @@ class Handler(BaseHTTPRequestHandler):
                     cur["whose"] = payload["whose"]
                 if payload.get("theme") in ("light", "dark"):
                     cur["theme"] = payload["theme"]
+                if isinstance(payload.get("labels"), bool):
+                    cur["labels"] = payload["labels"]
                 write_json_atomic(SETTINGS_PATH, cur)
                 return self.send_json({"ok": True, "settings": cur,
                                        "dist_km": effective_dist_km(cur)})

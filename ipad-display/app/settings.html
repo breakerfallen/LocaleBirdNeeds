@@ -91,6 +91,13 @@
     <div class="pills" id="whosePills"></div>
   </div>
   <div class="setrow">
+    <div class="lab">Bird names<div class="sub">Write each bird's name under it, by hand. Off keeps the collage a picture — hover a bird to name it.</div></div>
+    <div class="pills" id="labelPills">
+      <button data-labels="off">Off</button>
+      <button data-labels="on">On</button>
+    </div>
+  </div>
+  <div class="setrow">
     <div class="lab">Appearance<div class="sub">Dark uses a true-black background to save power on the display.</div></div>
     <div class="pills" id="themePills">
       <button data-theme="light">Light</button>
@@ -219,6 +226,7 @@ async function loadSettings() {
   markPills(document.getElementById("daysPills"), "days", cfg.days);
   markPills(document.getElementById("whosePills"), "whose", cfg.whose);
   markPills(document.getElementById("themePills"), "theme", cfg.theme);
+  markPills(document.getElementById("labelPills"), "labels", cfg.labels ? "on" : "off");
   applyTheme(cfg.theme);
 }
 distEl.addEventListener("input", () => {
@@ -240,6 +248,12 @@ document.getElementById("whosePills").addEventListener("click", async (e) => {
   markPills(e.currentTarget, "whose", b.dataset.whose);
   await postSettings({ whose: b.dataset.whose });
   toast(`Showing ${b.dataset.whose === "both" ? "both lists" : LABEL[b.dataset.whose] + "'s needs"}`);
+});
+document.getElementById("labelPills").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  markPills(e.currentTarget, "labels", b.dataset.labels);
+  await postSettings({ labels: b.dataset.labels === "on" });
+  toast(b.dataset.labels === "on" ? "Names on" : "Names off");
 });
 document.getElementById("themePills").addEventListener("click", async (e) => {
   const b = e.target.closest("button"); if (!b) return;

@@ -73,10 +73,13 @@ to install — it uses only what ships with macOS Python 3.
    then Settings → Accessibility → Guided Access to lock it to the page; Android
    tablets have similar "pinned app" modes. Keep the device plugged in.
 
-The collage shows just the birds — no labels. **Hover a bird** (or tap on a
+The collage ships with just the birds — no labels. **Hover a bird** (or tap on a
 touchscreen — a second tap opens it) and it highlights while a pill along the bottom names it and shows who
 needs it, the most-recent nearby hotspot, its distance in miles, and how long
-ago it was seen. Move off and the names disappear again.
+ago it was seen. Move off and the names disappear again. If you'd rather read
+the board at a glance, ⚙ → **Bird names** letters each bird's name underneath it
+in a handwritten face; the packer reserves room for the lettering, so names never
+land on a neighbour.
 
 The collage keeps itself current, and the server polls eBird **at most once an
 hour** — every page load in between is served instantly from a local cache
@@ -92,8 +95,9 @@ per person, hover to see whose). Filter **Needs / All seen here**; sort **Most
 recent / A–Z / By size**. It accumulates in `data/atlas.json` with each fresh
 eBird pull. Tap a card for the species detail page.
 
-The main collage stays deliberately clean — no heading, no badges, just birds;
-the who-needs-it chips live on the species detail page and the Atlas.
+The main collage stays deliberately clean by default — no heading, no badges,
+just birds (names are opt-in, see the ⚙ below); the who-needs-it chips live on
+the species detail page and the Atlas.
 
 **Fresh arrivals fly.** Most birds are drawn perched. A bird is shown in its
 **in-flight** pose while it's a fresh arrival — first recorded by the app's
@@ -113,6 +117,12 @@ controls in one place:
   this at 31 mi (50 km). Changing it re-queries eBird at the new radius.
 - **Days out** — 1 / 3 / 7 / 30 days; how recent a sighting must be to show.
 - **Whose needs** — any one person, or everyone.
+- **Bird names** — off by default. On writes each bird's common name under it
+  in **Caveat** (a handwriting face, SIL OFL, bundled in
+  `app/vendor/fonts/` — no webfont call). The name is measured before the flock
+  is packed and its strip is reserved like part of the bird, so lettering never
+  collides; birds too small to letter under stay unlabelled. Hover still shows
+  the full pill either way.
 - **Appearance** — Light (warm cream) or Dark. Dark uses a true-black
   background, which turns OLED pixels fully off to save battery on a tablet; text is a
   soft warm gray at AA contrast, silhouettes invert to light, and the detail
@@ -258,8 +268,8 @@ silhouette at a default size until you add a row and re-run
 - `config.json` — your eBird key, people, location, radius, port (copy from
   `config.example.json`; gitignored — never commit it)
 - `app/` — the pages (`index.html` collage, `atlas.html` atlas, `species.html`
-  detail, `settings.html` lists & settings, `app.js`, vendored Leaflet +
-  silhouettes)
+  detail, `settings.html` lists & settings, `app.js`, vendored Leaflet,
+  silhouettes + the Caveat font used for optional bird names)
 - `data/` — the life lists, `settings.json`, the species length/shape table,
   the hourly sightings cache, and the cumulative atlas registry
 - `images/` — local bird images (silhouettes always; woodblock PNGs if you build them)
