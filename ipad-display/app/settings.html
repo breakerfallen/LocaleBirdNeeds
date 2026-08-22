@@ -91,10 +91,20 @@
     <div class="pills" id="whosePills"></div>
   </div>
   <div class="setrow">
-    <div class="lab">Bird names<div class="sub">Write each bird's name under it, by hand. Off keeps the collage a picture — hover a bird to name it.</div></div>
+    <div class="lab">Bird names<div class="sub">Handwritten names on the collage. <b>Nested</b> sets each name along the bird's own back or belly, so it reads as part of the drawing; <b>Below</b> parks it underneath. Off keeps the collage a picture — hover a bird to name it.</div></div>
     <div class="pills" id="labelPills">
       <button data-labels="off">Off</button>
-      <button data-labels="on">On</button>
+      <button data-labels="below">Below</button>
+      <button data-labels="nested">Nested</button>
+    </div>
+  </div>
+  <div class="setrow">
+    <div class="lab">Fresh arrivals fly<div class="sub">How long a newly-arrived bird is drawn in flight instead of perched. Never keeps the whole flock perched.</div></div>
+    <div class="pills" id="flightPills">
+      <button data-flight="0">Never</button>
+      <button data-flight="1">24 h</button>
+      <button data-flight="3">3 days</button>
+      <button data-flight="7">7 days</button>
     </div>
   </div>
   <div class="setrow">
@@ -226,7 +236,8 @@ async function loadSettings() {
   markPills(document.getElementById("daysPills"), "days", cfg.days);
   markPills(document.getElementById("whosePills"), "whose", cfg.whose);
   markPills(document.getElementById("themePills"), "theme", cfg.theme);
-  markPills(document.getElementById("labelPills"), "labels", cfg.labels ? "on" : "off");
+  markPills(document.getElementById("labelPills"), "labels", cfg.labels || "off");
+  markPills(document.getElementById("flightPills"), "flight", String(cfg.flight_days));
   applyTheme(cfg.theme);
 }
 distEl.addEventListener("input", () => {
@@ -249,11 +260,19 @@ document.getElementById("whosePills").addEventListener("click", async (e) => {
   await postSettings({ whose: b.dataset.whose });
   toast(`Showing ${b.dataset.whose === "both" ? "both lists" : LABEL[b.dataset.whose] + "'s needs"}`);
 });
+const LABEL_TOAST = { off: "Names off", below: "Names below each bird", nested: "Names set along each bird" };
 document.getElementById("labelPills").addEventListener("click", async (e) => {
   const b = e.target.closest("button"); if (!b) return;
   markPills(e.currentTarget, "labels", b.dataset.labels);
-  await postSettings({ labels: b.dataset.labels === "on" });
-  toast(b.dataset.labels === "on" ? "Names on" : "Names off");
+  await postSettings({ labels: b.dataset.labels });
+  toast(LABEL_TOAST[b.dataset.labels]);
+});
+document.getElementById("flightPills").addEventListener("click", async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  markPills(e.currentTarget, "flight", b.dataset.flight);
+  const d = parseInt(b.dataset.flight, 10);
+  await postSettings({ flight_days: d });
+  toast(d === 0 ? "Everything perched" : `Fresh arrivals fly for ${d === 1 ? "24 h" : d + " days"}`);
 });
 document.getElementById("themePills").addEventListener("click", async (e) => {
   const b = e.target.closest("button"); if (!b) return;

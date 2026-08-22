@@ -77,9 +77,10 @@ The collage ships with just the birds — no labels. **Hover a bird** (or tap on
 touchscreen — a second tap opens it) and it highlights while a pill along the bottom names it and shows who
 needs it, the most-recent nearby hotspot, its distance in miles, and how long
 ago it was seen. Move off and the names disappear again. If you'd rather read
-the board at a glance, ⚙ → **Bird names** letters each bird's name underneath it
-in a handwritten face; the packer reserves room for the lettering, so names never
-land on a neighbour.
+the board at a glance, ⚙ → **Bird names** letters them on in a handwritten face —
+**nested** along each bird's own back or belly, or **below** it as a caption.
+Either way the packer reserves room for the lettering, so a name never lands on
+a neighbour.
 
 The collage keeps itself current, and the server polls eBird **at most once an
 hour** — every page load in between is served instantly from a local cache
@@ -101,12 +102,15 @@ the species detail page and the Atlas.
 
 **Fresh arrivals fly.** Most birds are drawn perched. A bird is shown in its
 **in-flight** pose while it's a fresh arrival — first recorded by the app's
-hourly polling within the last 24 hours, or seen again after not having been seen
-for 14+ days — so a newly-found (not "continuing") bird stands out mid-flight. It
+hourly polling within the flight window set in the ⚙ (24 hours by default), or
+seen again after not having been seen for 14+ days — so a newly-found (not "continuing") bird stands out mid-flight. It
 only flies if a flight illustration exists for it (all 249 bundled species have
 one; uploads are perched unless you add a flight image). The app ships with a
 clean baseline where everything currently known counts as continuing, so flight
-appears organically as genuinely new species turn up.
+appears organically as genuinely new species turn up. If the app itself has been
+off for longer than that 14-day window, the catch-up poll can't tell "the bird
+came back" from "nobody was watching" — so it re-baselines instead of putting the
+whole flock in the air at once.
 
 ## Settings (the ⚙ cog)
 
@@ -117,12 +121,24 @@ controls in one place:
   this at 31 mi (50 km). Changing it re-queries eBird at the new radius.
 - **Days out** — 1 / 3 / 7 / 30 days; how recent a sighting must be to show.
 - **Whose needs** — any one person, or everyone.
-- **Bird names** — off by default. On writes each bird's common name under it
-  in **Caveat** (a handwriting face, SIL OFL, bundled in
-  `app/vendor/fonts/` — no webfont call). The name is measured before the flock
-  is packed and its strip is reserved like part of the bird, so lettering never
-  collides; birds too small to letter under stay unlabelled. Hover still shows
-  the full pill either way.
+- **Bird names** — **Off** (default) · **Below** · **Nested**. Both on-settings
+  write the bird's common name in **Caveat** (a handwriting face, SIL OFL,
+  bundled in `app/vendor/fonts/` — no webfont call).
+  **Below** parks a caption under the tile. **Nested** sets the name along a run
+  of the bird's own outline — a stretch of back or belly straight enough to
+  carry it — so it reads as part of the drawing; this follows the treatment
+  described at
+  [theodore.net/projects/AvianVisitors](https://theodore.net/projects/AvianVisitors/),
+  though it fits a straight baseline to that run rather than bending type along
+  the contour. A bird that offers no run worth writing along falls back to the
+  caption, so nothing goes unnamed, and the whole inked band is proved clear of
+  the silhouette before a placement is accepted. Either way the lettering's box
+  is reserved during packing, and birds under 56 px stay bare. Hover still shows
+  the full pill.
+- **Fresh arrivals fly** — **Never** · **24 h** (default) · **3 days** ·
+  **7 days**: how long a newly-arrived bird is drawn in flight instead of
+  perched. *Never* keeps the whole flock perched. (What counts as an *arrival*
+  is separate — see below.)
 - **Appearance** — Light (warm cream) or Dark. Dark uses a true-black
   background, which turns OLED pixels fully off to save battery on a tablet; text is a
   soft warm gray at AA contrast, silhouettes invert to light, and the detail

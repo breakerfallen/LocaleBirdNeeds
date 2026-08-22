@@ -69,6 +69,13 @@
     transition: color 0.15s ease;
   }
   .tile.is-hover .name { color: var(--ink); }
+  /* Nested: positioned per-bird from the run finder, so it overrides the
+     caption's centring entirely. */
+  .tile .name.nested {
+    top: auto; left: auto;
+    margin-top: 0;
+    transform-origin: 50% 50%;
+  }
   .tile .art { display: flex; align-items: flex-end; justify-content: center; width: 100%; }
   .tile img {
     display: block; width: 100%; height: 100%; object-fit: contain;
@@ -225,6 +232,42 @@ function loadImg(src) {
   return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
 }
 
+// A second, finer mask used only for lettering geometry. The packing grid is
+// 30 px on its long side — plenty to nest shapes, far too coarse to find a
+// stretch of back straight enough to write along. Column profiles (topmost and
+// bottommost ink per column) are what the run finder actually reads.
+const FINE_RES = 120;
+const fineCache = {};
+async function ensureFine(url) {
+  if (fineCache[url]) return fineCache[url];
+  let fine;
+  try {
+    const img = await loadImg(url);
+    const nw = img.naturalWidth || 1, nh = img.naturalHeight || 1;
+    let fw, fh;
+    if (nw >= nh) { fw = FINE_RES; fh = Math.max(1, Math.round(FINE_RES * nh / nw)); }
+    else { fh = FINE_RES; fw = Math.max(1, Math.round(FINE_RES * nw / nh)); }
+    const c = document.createElement("canvas"); c.width = fw; c.height = fh;
+    const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0, fw, fh);
+    const d = ctx.getImageData(0, 0, fw, fh).data;
+    const solid = new Uint8Array(fw * fh);
+    const top = new Int16Array(fw).fill(-1), bot = new Int16Array(fw).fill(-1);
+    for (let x = 0; x < fw; x++) {
+      for (let y = 0; y < fh; y++) {
+        if (d[(y * fw + x) * 4 + 3] > 20) {
+          solid[y * fw + x] = 1;
+          if (top[x] < 0) top[x] = y;
+          bot[x] = y;
+        }
+      }
+    }
+    fine = { fw, fh, solid, top, bot };
+  } catch {
+    fine = null;
+  }
+  fineCache[url] = fine; return fine;
+}
+
 async function ensureSil(url) {
   if (silCache[url]) return silCache[url];
   let sil;
@@ -261,19 +304,143 @@ const LABEL_GAP = 3;         // px between the art and the name
 const LABEL_MIN_TILE = 56;   // don't letter under a bird this small
 const labelCtx = document.createElement("canvas").getContext("2d");
 
-function measureLabels(items, on) {
+// ---- nested names: find a run of outline worth writing along ---------------
+// After the treatment described at theodore.net/projects/AvianVisitors — the
+// name rides a stretch of the bird's own edge (a back, a belly) so it reads as
+// part of the drawing rather than a caption pinned underneath. This version
+// fits a straight baseline to that run rather than bending type along the
+// contour: upstream allows a run to bow off its chord anyway, and a straight
+// line is what its fallback tier draws, so the effect survives and the geometry
+// stays honest. Runs are read off the column profiles of the fine mask.
+const LABEL_NEAR = 2;      // px of paper between the silhouette and the letters
+const LABEL_DEG = 40;      // steepest lean that still reads as writing
+// A bird's back is a curve, so a long run never fits a straight line: measured
+// across this library the median bow of a full-width run is ~0.29 of its length.
+// The answer is a shorter run, not a looser line — the type is sized from the
+// tile and carries on past the run along the line that run established, so a
+// run only has to point, not contain.
+const LABEL_BOW = 0.11;    // how far a run may wander off its own chord (of run length)
+const LABEL_MIN_RUN = 0.22; // shortest usable run, as a share of tile width
+const LABEL_ASC = 0.80;    // Caveat's inked band above the baseline, in em
+const LABEL_DESC = 0.25;   // and below
+
+// Least-squares line through (x, y) samples -> {m, b, bow}.
+function fitRun(xs, ys) {
+  const n = xs.length;
+  let sx = 0, sy = 0, sxx = 0, sxy = 0;
+  for (let i = 0; i < n; i++) { sx += xs[i]; sy += ys[i]; sxx += xs[i] * xs[i]; sxy += xs[i] * ys[i]; }
+  const den = n * sxx - sx * sx;
+  const m = Math.abs(den) < 1e-6 ? 0 : (n * sxy - sx * sy) / den;
+  const b = (sy - m * sx) / n;
+  let bow = 0;
+  for (let i = 0; i < n; i++) bow = Math.max(bow, Math.abs(ys[i] - (m * xs[i] + b)));
+  return { m, b, bow };
+}
+
+// Best run along one profile ("back" = top edge, letters sit above it;
+// "belly" = bottom edge, letters sit below). Coordinates are fine-mask px.
+function bestRun(prof, side, fw, minRunPx) {
+  let best = null;
+  const valid = (x) => prof[x] >= 0;
+  for (let len = fw; len >= minRunPx; len = Math.floor(len * 0.85)) {
+    for (let x0 = 0; x0 + len <= fw; x0 += Math.max(1, Math.floor(len * 0.12))) {
+      const xs = [], ys = [];
+      let gap = false;
+      for (let x = x0; x < x0 + len; x++) {
+        if (!valid(x)) { gap = true; break; }
+        xs.push(x); ys.push(prof[x]);
+      }
+      if (gap || xs.length < 4) continue;
+      const f = fitRun(xs, ys);
+      if (f.bow > LABEL_BOW * len) continue;
+      const deg = Math.abs(Math.atan(f.m) * 180 / Math.PI);
+      if (deg > LABEL_DEG) continue;
+      // Longer and flatter wins; a run that spans the drawing reads best.
+      const score = len * (1 - deg / (LABEL_DEG * 2.2));
+      if (!best || score > best.score) {
+        best = { score, x0, x1: x0 + len - 1, m: f.m, b: f.b, side, len };
+      }
+    }
+    if (best) break;   // longest tier that yields anything wins
+  }
+  return best;
+}
+
+// True if the whole inked band of the name clears the bird. Sampled across the
+// text's real span, not just the run's — the lettering usually carries on past
+// the edge it rides, and that overhang is exactly where it could plough back
+// into a wing. Anything outside the mask is open paper and counts as clear.
+function bandClear(fine, run, px, fineScale, textWFine) {
+  const band = (LABEL_ASC + LABEL_DESC) * px / fineScale;  // band height, fine px
+  const near = LABEL_NEAR / fineScale;
+  const dir = run.side === "back" ? -1 : 1;                // which way is paper
+  const mid = (run.x0 + run.x1) / 2;
+  const half = Math.max((run.x1 - run.x0) / 2, textWFine / 2);
+  const from = Math.round(mid - half), to = Math.round(mid + half);
+  let ink = 0, n = 0;
+  for (let x = from; x <= to; x += 2) {
+    const edge = run.m * x + run.b;
+    for (let k = 0; k <= 4; k++) {
+      n++;
+      if (x < 0 || x >= fine.fw) continue;                 // past the bird: paper
+      const y = Math.round(edge + dir * (near + (k / 4) * band));
+      if (y < 0 || y >= fine.fh) continue;
+      if (fine.solid[y * fine.fw + x]) ink++;
+    }
+  }
+  return n ? ink / n <= 0.04 : false;
+}
+
+// mode: "off" | "below" | "nested". Fills the tile's label geometry and the
+// footprint the packer must keep clear (labelBox, in tile-local px).
+function measureLabels(items, mode) {
   for (const it of items) {
-    it.labelW = 0; it.labelH = 0; it.labelPx = 0;
-    if (!on) continue;
+    it.label = null; it.labelW = 0; it.labelH = 0; it.labelPx = 0; it.labelBox = null;
+    if (mode === "off") continue;
     const name = it.o.comName || it.o.sciName;
     if (!name || it.W < LABEL_MIN_TILE) continue;
     // Size tracks the tile so the lettering stays in proportion across a flock
     // that runs from a kinglet to a crane.
     const px = Math.round(Math.max(12, Math.min(20, it.W * 0.14)));
     labelCtx.font = `600 ${px}px Hand, cursive`;
+    const textW = Math.ceil(labelCtx.measureText(name).width);
     it.labelPx = px;
-    it.labelW = Math.min(Math.ceil(labelCtx.measureText(name).width) + 6, it.W * 1.7);
-    it.labelH = LABEL_GAP + Math.round(px * 1.2);
+
+    if (mode === "nested" && it.fine) {
+      const fine = it.fine;
+      const fineScale = it.W / fine.fw;           // fine px -> tile px
+      const minRunPx = Math.max(6, (LABEL_MIN_RUN * it.W) / fineScale);
+      let run = bestRun(fine.top, "back", fine.fw, minRunPx);
+      const belly = bestRun(fine.bot, "belly", fine.fw, minRunPx);
+      // Prefer whichever edge is longer and flatter; a tie goes to the back,
+      // which is where a name reads most naturally on a perched bird.
+      if (belly && (!run || belly.score > run.score * 1.08)) run = belly;
+      if (run && bandClear(fine, run, px, fineScale, textW / fineScale)) {
+        const dir = run.side === "back" ? -1 : 1;
+        const angle = Math.atan(run.m) * 180 / Math.PI;
+        // Baseline midpoint, in tile px, pushed onto the paper side.
+        const mxF = (run.x0 + run.x1) / 2;
+        const myF = run.m * mxF + run.b;
+        const cx = mxF * fineScale;
+        const cy = myF * fineScale + dir * (LABEL_NEAR + (dir < 0 ? LABEL_ASC : LABEL_DESC) * px);
+        it.label = { mode: "nested", name, px, w: textW, angle, cx, cy };
+        // Reserved box: the rotated text's axis-aligned bounds around (cx, cy).
+        const rad = Math.abs(run.m) ? Math.atan(run.m) : 0;
+        const h = px * (LABEL_ASC + LABEL_DESC);
+        const bw = Math.abs(textW * Math.cos(rad)) + Math.abs(h * Math.sin(rad));
+        const bh = Math.abs(textW * Math.sin(rad)) + Math.abs(h * Math.cos(rad));
+        it.labelBox = { x0: cx - bw / 2, y0: cy - bh / 2, x1: cx + bw / 2, y1: cy + bh / 2 };
+        continue;
+      }
+      // No edge worth writing along — fall through to the caption so no bird
+      // is left bare, which is the same escape upstream's tangent tier gives.
+    }
+
+    const w = Math.min(textW + 6, it.W * 1.7);
+    const h = LABEL_GAP + Math.round(px * 1.2);
+    it.label = { mode: "below", name, px, w };
+    it.labelW = w; it.labelH = h;
+    it.labelBox = { x0: (it.W - w) / 2, y0: it.H, x1: (it.W + w) / 2, y1: it.H + h };
   }
 }
 
@@ -292,11 +459,10 @@ function pack(items, aspect) {
     // Reserve the name strip: a solid block under the art, centred on the tile.
     // Offsets may go negative when the name is wider than the bird — fine, they
     // are just deltas from the tile origin.
-    if (it.labelH) {
-      const lx0 = Math.floor((it.W - it.labelW) / 2 / CELL);
-      const lx1 = Math.ceil((it.W + it.labelW) / 2 / CELL);
-      const ly0 = Math.floor(it.H / CELL);
-      const ly1 = Math.ceil((it.H + it.labelH) / CELL);
+    if (it.labelBox) {
+      const lb = it.labelBox;
+      const lx0 = Math.floor(lb.x0 / CELL), lx1 = Math.ceil(lb.x1 / CELL);
+      const ly0 = Math.floor(lb.y0 / CELL), ly1 = Math.ceil(lb.y1 / CELL);
       for (let gx = lx0; gx <= lx1; gx++)
         for (let gy = ly0; gy <= ly1; gy++) local.push([gx, gy]);
     }
@@ -379,8 +545,10 @@ async function layout() {
   // length² — the bird's on-screen bulk is the same whatever its pose/aspect,
   // so a compact upright bird no longer looks tiny beside a spread one of
   // similar size. Tile aspect = image aspect, so no letterbox either.
+  const labelMode = (cfg && cfg.labels) || "off";
   await Promise.all(items.map(async (it) => {
     it.sil = await ensureSil(it.o.img);
+    if (labelMode === "nested") it.fine = await ensureFine(it.o.img);
     const ar = Math.max(0.33, Math.min(3.2, it.sil.ar)); // allow herons/swifts (tall) & loons/skimmers (long)
     const rt = Math.sqrt(ar);
     it.W = Math.round(it.s * rt);
@@ -393,16 +561,19 @@ async function layout() {
   // too stretched). fit() keeps the margins and bottom-weighting.
   const availW0 = window.innerWidth - 48, availH0 = window.innerHeight - 76;
   const flockAspect = Math.max(1, Math.min(2.4, availW0 / availH0));
-  measureLabels(items, !!(cfg && cfg.labels));
+  measureLabels(items, labelMode);
   pack(items, flockAspect);
 
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const it of items) {
     // A name can hang below the art and wider than it, so it counts toward the
     // flock's extent — otherwise fit() would scale the lettering off-screen.
-    const over = it.labelW > it.W ? (it.labelW - it.W) / 2 : 0;
-    minX = Math.min(minX, it.cx - it.W / 2 - over); maxX = Math.max(maxX, it.cx + it.W / 2 + over);
-    minY = Math.min(minY, it.cy - it.H / 2); maxY = Math.max(maxY, it.cy + it.H / 2 + it.labelH);
+    const lb = it.labelBox;
+    const l = it.cx - it.W / 2, t = it.cy - it.H / 2;
+    minX = Math.min(minX, lb ? l + Math.min(0, lb.x0) : l);
+    maxX = Math.max(maxX, l + (lb ? Math.max(it.W, lb.x1) : it.W));
+    minY = Math.min(minY, lb ? t + Math.min(0, lb.y0) : t);
+    maxY = Math.max(maxY, t + (lb ? Math.max(it.H, lb.y1) : it.H));
   }
   const W = maxX - minX, H = maxY - minY;
 
@@ -427,11 +598,21 @@ async function layout() {
     art.appendChild(img);
 
     a.append(art);
-    if (it.labelH) {
+    if (it.label) {
       const nm = document.createElement("span");
-      nm.className = "name";
-      nm.style.fontSize = `${it.labelPx}px`;
-      nm.textContent = o.comName || o.sciName;
+      nm.textContent = it.label.name;
+      nm.style.fontSize = `${it.label.px}px`;
+      if (it.label.mode === "nested") {
+        // Set on the line the bird's own edge established, centred on that
+        // baseline; the transform origin is the text's own middle so the
+        // rotation pivots where the run does.
+        nm.className = "name nested";
+        nm.style.left = `${it.label.cx}px`;
+        nm.style.top = `${it.label.cy}px`;
+        nm.style.transform = `translate(-50%, -50%) rotate(${it.label.angle.toFixed(2)}deg)`;
+      } else {
+        nm.className = "name";
+      }
       a.appendChild(nm);
     }
     collage.appendChild(a);

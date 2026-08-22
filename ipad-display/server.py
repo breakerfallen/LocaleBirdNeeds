@@ -135,11 +135,25 @@ def load_settings():
     theme = s.get("theme", "light")
     if theme not in ("light", "dark"):
         theme = "light"
-    # Names under the birds. Off by default — the collage is meant to read as a
-    # picture first, and you can always hover for the pill.
-    labels = bool(s.get("labels", False))
+    # Names on the birds: off, a caption below, or set along the bird's own
+    # outline. Off by default — the collage is meant to read as a picture first,
+    # and you can always hover for the pill. Older installs stored a bool.
+    labels = s.get("labels", "off")
+    if labels is True:
+        labels = "below"
+    elif labels is False:
+        labels = "off"
+    if labels not in ("off", "below", "nested"):
+        labels = "off"
+    # How long a fresh arrival keeps flying. 0 = never fly, everything perched.
+    try:
+        flight_days = int(s.get("flight_days", 1))
+    except (TypeError, ValueError):
+        flight_days = 1
+    if flight_days not in (0, 1, 3, 7):
+        flight_days = 1
     return {"dist_miles": dist_mi, "days": days, "whose": whose, "theme": theme,
-            "labels": labels}
+            "labels": labels, "flight_days": flight_days}
 
 
 def effective_dist_km(settings):
@@ -388,7 +402,7 @@ _cache_lock = threading.Lock()
 
 # A species flies on the collage while it's a fresh arrival: first recorded by
 # our polling within the last 24 h, or returning after being gone a while.
-NEW_WINDOW_S = 24 * 3600
+NEW_WINDOW_S = 24 * 3600  # default fresh-arrival window; overridden by settings
 ARRIVAL_GAP_DAYS = 14  # unseen at least this long, then seen again = a re-arrival
 
 
@@ -591,7 +605,7 @@ class Handler(BaseHTTPRequestHandler):
                     "dist_km": effective_dist_km(st), "dist_miles": st["dist_miles"],
                     "max_dist_miles": MAX_DIST_MI,
                     "days": st["days"], "whose": st["whose"], "theme": st["theme"],
-                    "labels": st["labels"],
+                    "labels": st["labels"], "flight_days": st["flight_days"],
                     "back_days": CONFIG["back_days"],
                     "place_label": CONFIG.get("place_label", CONFIG.get("location_label", "")),
                     "has_key": bool(CONFIG.get("ebird_api_key")),
@@ -602,6 +616,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/nearby":
                 import time as _t
                 obs, fetched_at = get_nearby_obs()
+                fly_window_s = load_settings()["flight_days"] * 86400
                 life_sets = load_life_sets()
                 # An empty life list means "not uploaded yet", not "needs every
                 # bird on earth" — treat that person as needing nothing so the
@@ -621,7 +636,7 @@ class Handler(BaseHTTPRequestHandler):
                     # Fresh arrival (first recorded < 24 h ago) flies, if it has a
                     # flight illustration; everything else is perched.
                     ff = (atlas.get(o.get("speciesCode")) or {}).get("firstFetchedAt", 0)
-                    is_new = bool(ff) and (now_ts - ff < NEW_WINDOW_S)
+                    is_new = bool(fly_window_s) and bool(ff) and (now_ts - ff < fly_window_s)
                     o["isNew"] = is_new
                     if is_new and o.get("imgFlight"):
                         o["img"] = o["imgFlight"]
@@ -772,8 +787,10 @@ class Handler(BaseHTTPRequestHandler):
                     cur["whose"] = payload["whose"]
                 if payload.get("theme") in ("light", "dark"):
                     cur["theme"] = payload["theme"]
-                if isinstance(payload.get("labels"), bool):
+                if payload.get("labels") in ("off", "below", "nested"):
                     cur["labels"] = payload["labels"]
+                if payload.get("flight_days") in (0, 1, 3, 7):
+                    cur["flight_days"] = payload["flight_days"]
                 write_json_atomic(SETTINGS_PATH, cur)
                 return self.send_json({"ok": True, "settings": cur,
                                        "dist_km": effective_dist_km(cur)})
