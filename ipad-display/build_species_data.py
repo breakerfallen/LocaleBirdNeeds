@@ -5,6 +5,11 @@ the app reads at display time. Run once (or again after editing SPECIES below):
 
     python3 build_species_data.py
 
+To find species that need a row — run this after every new batch of art, since
+a bundle always brings birds this table has never heard of:
+
+    python3 build_species_data.py --audit
+
 No network, no API. Lengths are average total body length in inches (bill to
 tail), curated for Colorado Front Range species. "shape" picks one of the
 built-in silhouettes in app/vendor/silhouettes/. Anything the live eBird feed
@@ -16,6 +21,11 @@ Keyed by lowercase scientific binomial so matching is case-insensitive.
 """
 import json
 import os
+import sys
+
+# What server.py falls back to for a species with no row here — kept in step
+# with enrich() so the audit below can name the number.
+DEFAULT_LEN = 8
 
 # sci (binomial)                 -> (common name, length_in, shape)
 SPECIES = {
@@ -449,8 +459,41 @@ SPECIES = {
 }
 
 
+def audit(here):
+    """Every species the atlas has recorded that has no row here.
+
+    Those birds are not broken — they draw at DEFAULT_LEN with a generic
+    songbird silhouette — but the fallback is invisible on screen, and on a
+    board whose whole premise is scale a wrong size reads as fact. Worth
+    running after any new batch of art, because a bundle brings species this
+    table has never heard of.
+    """
+    atlas_path = os.path.join(here, "data", "atlas.json")
+    if not os.path.exists(atlas_path):
+        print("No data/atlas.json yet — nothing recorded to audit.")
+        return 0
+    atlas = json.load(open(atlas_path))
+    missing = []
+    for entry in atlas.values():
+        sci = " ".join((entry.get("sciName") or "").lower().split()[:2])
+        if sci and sci not in SPECIES:
+            missing.append((entry.get("comName") or "?", sci))
+    if not missing:
+        print(f"All {len(atlas)} species recorded here have a length. Nothing to add.")
+        return 0
+    print(f"{len(missing)} of {len(atlas)} recorded species have no row and draw "
+          f'at the generic {DEFAULT_LEN}" fallback:\n')
+    for common, sci in sorted(missing):
+        print(f'    "{sci}":{" " * max(1, 28 - len(sci))}("{common}", ?, "?"),')
+    print("\nAdd them to SPECIES above with a real body length (bill to tail) and\n"
+          "a shape from app/vendor/silhouettes/, then re-run without --audit.")
+    return 1
+
+
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
+    if "--audit" in sys.argv:
+        return audit(here)
     out = os.path.join(here, "data", "species_data.json")
     table = {
         sci: {"common": common, "lengthIn": length, "shape": shape}
@@ -460,7 +503,8 @@ def main():
     with open(out, "w") as f:
         json.dump(table, f, indent=0, sort_keys=True)
     print(f"Wrote {len(table)} species to {out}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

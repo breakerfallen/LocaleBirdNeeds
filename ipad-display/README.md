@@ -191,6 +191,11 @@ coastal, so it misses some Colorado migrants) falls back to a **sumi-ink
 silhouette typed to its family** (heron, duck, hawk, warbler, …), scaled to real
 body length and generated locally.
 
+> **After adding any batch of art, audit the size table** — new illustrations
+> bring new species, and one without a row draws at the generic 8″ default:
+> `python3 build_species_data.py --audit`. See
+> [How body length / shape is set](#how-body-length--shape-is-set).
+
 Illustrations resolve by scientific-name slug (`images/genus-species_perched.png`)
 so subspecies sightings and eBird's genus renames both map correctly. Both the
 bundled art and your uploads are cropped tight to the bird (uploads are
@@ -251,12 +256,31 @@ set stays small.
 
 ## How body length / shape is set
 
-`data/species_data.json` is a local table of ~250 Colorado Front Range species
-(body length in inches + silhouette family), built by `build_species_data.py`.
-The app reads it directly — lengths are never fetched. A bird not in the table
-(a rare vagrant off the Colorado list) falls back to a generic songbird
-silhouette at a default size until you add a row and re-run
+`data/species_data.json` is a local table of ~365 species (body length in inches
++ silhouette family), built by `build_species_data.py`. The app reads it
+directly — lengths are never fetched. A bird not in the table falls back to a
+generic songbird silhouette at a default 8″ until you add a row and re-run
 `python3 build_species_data.py`.
+
+### Audit the table after adding art
+
+**Run this every time you add a batch of illustrations.** A bundle always brings
+species the table has never heard of, and they will quietly draw at 8″ — a
+Red-necked Grebe the size of a Semipalmated Plover:
+
+```
+python3 build_species_data.py --audit
+```
+
+It lists every species the atlas has recorded that has no row, as paste-ready
+lines. Fill in a real body length (bill to tail) and a shape from
+`app/vendor/silhouettes/`, add them to `SPECIES` in the script, then re-run it
+without `--audit` to rebuild the table.
+
+The fallback means the board never breaks on an unlisted bird — but it is
+invisible on screen, and on a collage whose whole premise is drawing to scale, a
+wrong size reads as fact rather than as a gap. That is why it is worth a
+deliberate pass rather than waiting to notice.
 
 ## Troubleshooting
 
