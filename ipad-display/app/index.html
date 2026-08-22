@@ -334,7 +334,6 @@ const LABEL_EXT_EM = 3.0;  // how far the line may carry past its run, per side,
 // Kept next to the CSS that draws it: canvas measures the name to size the
 // reserved box, so the two must agree or every width is wrong.
 const LABEL_WEIGHT = 400;
-const LABEL_TURN = 78;     // most a baseline may swing end to end, in degrees
 
 // Least-squares line through (x, y) samples -> {m, b, bow}.
 function fitRun(xs, ys) {
@@ -427,6 +426,16 @@ function baselineFor(fine, run, px, fineScale, textW) {
     if (ny * dir < 0) { nx = -nx; ny = -ny; }   // point onto the paper side
     pts.push([sm[i][0] + nx * push, sm[i][1] + ny * push]);
   }
+
+  // Offsetting a curve outward folds it wherever the source turns concave —
+  // the belly beside a leg, the notch under a tail. The fold shows up as the
+  // baseline doubling back on itself, and type set on it reverses mid-word.
+  // The run is parameterised left to right, so the baseline must advance in x;
+  // anything that does not is part of a fold and is dropped.
+  const fwd = [];
+  for (const q of pts) if (!fwd.length || q[0] > fwd[fwd.length - 1][0] + 0.15) fwd.push(q);
+  pts.length = 0; pts.push(...fwd);
+  if (pts.length < 4) return null;
 
   // Carry the line on past the run until it is long enough to set the whole
   // name — a run has to point, not contain. Two rules keep the overhang from
@@ -542,13 +551,36 @@ function polyLen(pts) {
   return L;
 }
 
-// How far a baseline swings end to end. A line that turns hard is one curling
-// round a tail or a pair of feet, and the letters follow it round.
-function turnOf(pts) {
-  const k = Math.max(1, Math.floor(pts.length * 0.15));
-  const dirAt = (i, j) => Math.atan2(pts[j][1] - pts[i][1], pts[j][0] - pts[i][0]);
-  const t = Math.abs(dirAt(0, k) - dirAt(pts.length - 1 - k, pts.length - 1)) * 180 / Math.PI;
-  return Math.min(t, 360 - t);
+// Sharpest local bend along a baseline, in degrees per em of arc. This — not
+// the overall swing — is what makes lettering look wrong: glyphs are set on the
+// local tangent, so a kink inside a word or two fans the outer edge and crushes
+// the inner one. A long gentle arc measures low here and reads beautifully; a
+// short hook measures high even when the ends line up.
+function kinkOf(pts, emFine) {
+  // Stepped by ARC LENGTH, not by array index. Points are spaced along the
+  // source profile, so where a curve steepens a fixed number of indices spans
+  // much less of the line — an index step blurs exactly the bends it is meant
+  // to find, and rated a hooked belly calmer than the long back beside it.
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const total = cum[cum.length - 1];
+  const step = Math.max(1, emFine);
+  if (total < 2 * step) return 0;
+  const at = (d) => {
+    let i = 1;
+    while (i < cum.length - 1 && cum[i] < d) i++;
+    const t = (d - cum[i - 1]) / Math.max(1e-6, cum[i] - cum[i - 1]);
+    return [pts[i - 1][0] + t * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + t * (pts[i][1] - pts[i - 1][1])];
+  };
+  const ang = (p, q) => Math.atan2(q[1] - p[1], q[0] - p[0]);
+  let worst = 0;
+  for (let d = 0; d + 2 * step <= total; d += step / 2) {
+    const a = at(d), b = at(d + step), c = at(d + 2 * step);
+    let k = Math.abs(ang(a, b) - ang(b, c)) * 180 / Math.PI;
+    if (k > 180) k = 360 - k;
+    worst = Math.max(worst, k);
+  }
+  return worst;
 }
 
 function measureLabels(items, mode) {
@@ -584,14 +616,14 @@ function measureLabels(items, mode) {
       const minRunPx = Math.max(6, LABEL_MIN_RUN * fine.fw);
       const back = bestRun(fine.top, "back", fine.fw, minRunPx);
       const belly = bestRun(fine.bot, "belly", fine.fw, minRunPx);
-      // Try the better edge first, then the other — a bird whose back is busy
-      // will often still offer a clean belly, and vice versa.
-      const order = [];
-      if (back) order.push(back);
-      if (belly) order.push(belly);
-      order.sort((a, b) => b.score - a.score);
-      let placed = null;
-      for (const run of order) {
+      // Build BOTH edges and keep the one the name reads best on. Taking the
+      // first that merely fits picked by run length, which on a bird like a
+      // dowitcher hands the word to a sharply hooked belly while a long, calm
+      // back sits unused.
+      const emFine = px / fineScale;
+      let placed = null, bestKink = Infinity;
+      for (const run of [back, belly]) {
+        if (!run) continue;
         const bl = baselineFor(fine, run, px, fineScale, textW);
         if (!bl) continue;
         const ok = clearFlags(fine, bl.pts, bl.side, bl.dir, px, fineScale);
@@ -600,9 +632,14 @@ function measureLabels(items, mode) {
         const span = bl.pts.slice(i0, i0 + n0);
         if (polyLen(span) < bl.need) continue;      // not enough clear line
         const fitted = centreSlice(span, bl.need);
-        if (turnOf(fitted) > LABEL_TURN) continue;  // curls round a tail
-        placed = { pts: fitted, dir: bl.dir, side: bl.side };
-        break;
+        // Sharpest local bend decides, and nothing else gates on shape. An
+        // end-to-end turn cap used to sit here and had it exactly backwards: a
+        // long graceful arc along a back swings a long way end to end and was
+        // refused, while a short hook under a belly barely swings at all and
+        // sailed through. Local bend is what actually distorts letters, so it
+        // both picks the edge and is the only shape test left.
+        const kink = kinkOf(fitted, emFine);
+        if (kink < bestKink) { bestKink = kink; placed = { pts: fitted, dir: bl.dir, side: bl.side }; }
       }
       if (placed) {
         // Path in tile px, as a polyline dense enough that glyphs read smooth.
