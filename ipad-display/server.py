@@ -431,6 +431,12 @@ def _update_atlas(obs_list, fetched_at, prev_poll_at=0):
     # the catch-up pull as a fresh baseline instead — record what is here, flag
     # nothing as new, and let flight reappear organically on the next poll.
     catching_up = bool(prev_poll_at) and (fetched_at - prev_poll_at) >= ARRIVAL_GAP_DAYS * 86400
+    # ...but a species the registry has never held is new information however
+    # long we were away: not seeing it before is a fact about the record, not a
+    # guess about the bird. Only the re-arrival test is suppressed. An empty
+    # registry is the exception — a first run would flag the entire flock, which
+    # is the baseline the app is meant to ship with.
+    seed_run = catching_up and not atlas
     for o in obs_list:
         code = o.get("speciesCode")
         if not code:
@@ -440,8 +446,10 @@ def _update_atlas(obs_list, fetched_at, prev_poll_at=0):
         # Stamp the arrival time when the species is brand new, or when it comes
         # back after an absence; otherwise carry the existing stamp (0 = legacy /
         # continuing, so it won't suddenly fly).
-        arrived = (not catching_up) and (
-            (not cur) or _gap_days(cur.get("lastSeen"), new_dt) >= ARRIVAL_GAP_DAYS)
+        if not cur:
+            arrived = not seed_run                      # never recorded here before
+        else:
+            arrived = (not catching_up) and _gap_days(cur.get("lastSeen"), new_dt) >= ARRIVAL_GAP_DAYS
         first_fetched = fetched_at if arrived else cur.get("firstFetchedAt", 0)
         entry = {
             "speciesCode": code,
